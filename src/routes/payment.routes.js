@@ -5,6 +5,7 @@ import {
   handlePayHereNotification,
   getMyPayments,
   completePaymentSuccessReturn,
+  markPaymentCancelled,
 } from "../controllers/payment.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 
@@ -15,5 +16,6 @@ router.post("/checkout", protect, createCheckoutPayment);
 router.post("/payhere-notify", handlePayHereNotification);
 router.get("/my-payments", protect, getMyPayments);
 router.patch("/complete-success", protect, completePaymentSuccessReturn);
+router.post("/mark-cancelled", protect, markPaymentCancelled);
 
 export default router;

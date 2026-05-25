@@ -13,7 +13,12 @@ const donationSchema = new mongoose.Schema(
       default: "pending",
     },
 
-    transactionReference: String,
+    // sparse: true allows multiple docs with null, but enforces uniqueness when set
+    transactionReference: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
   },
   { timestamps: true }
 );

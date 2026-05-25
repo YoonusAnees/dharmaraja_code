@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../../api/axios";
+import { HeartHandshake, RefreshCw, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+
+const SESSION_KEY = "payhere_campaign_info";
 
 export default function Campaigns() {
   const [searchParams] = useSearchParams();
@@ -9,54 +12,93 @@ export default function Campaigns() {
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [payhereData, setPayhereData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
+
+  // PayHere form state
+  const [payhereFields, setPayhereFields] = useState(null);
+  const [checkoutUrl, setCheckoutUrl] = useState("");
   const payhereFormRef = useRef(null);
 
   const paymentStatus = searchParams.get("payment");
   const orderId = searchParams.get("order_id");
-  const paymentMessage = paymentStatus === "success"
-    ? "Payment completed successfully. Campaign progress was updated."
-    : paymentStatus === "cancel"
-    ? "Payment canceled. Please try again."
-    : "";
 
+  // ---- Load campaigns ----
   const loadCampaigns = async () => {
-    const res = await api.get("/campaigns");
-    setCampaigns(res.data.campaigns || []);
+    try {
+      setLoadingCampaigns(true);
+      const res = await api.get("/campaigns");
+      setCampaigns(res.data.campaigns || []);
+    } catch (err) {
+      console.error("Failed to load campaigns:", err);
+    } finally {
+      setLoadingCampaigns(false);
+    }
   };
 
+  // ---- On mount: handle payment return + load campaigns ----
   useEffect(() => {
-    const load = async () => {
-      if (paymentStatus === "success" && orderId) {
+    const init = async () => {
+      let stored = null;
+      try {
+        stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
+      } catch (_) {}
+
+      if (paymentStatus === "success" && (orderId || stored?.orderId)) {
         try {
-          await api.patch("/payments/complete-success", { orderId });
+          await api.patch("/payments/complete-success", {
+            orderId: orderId || stored?.orderId,
+            type: stored?.type,
+            itemId: stored?.itemId,
+            amount: stored?.amount,
+          });
         } catch (err) {
-          console.error("Failed to complete local checkout:", err);
+          console.error("complete-success error:", err);
         }
+        sessionStorage.removeItem(SESSION_KEY);
       }
+
+      if (paymentStatus === "cancel" && stored?.orderId) {
+        try {
+          await api.post("/payments/mark-cancelled", {
+            orderId: stored.orderId,
+            type: stored.type,
+            itemId: stored.itemId,
+            amount: stored.amount,
+          });
+        } catch (err) {
+          console.error("mark-cancelled error:", err);
+        }
+        sessionStorage.removeItem(SESSION_KEY);
+      }
+
       await loadCampaigns();
     };
-    load();
+    init();
   }, [paymentStatus, orderId]);
 
+  // ---- Submit PayHere form once fields are ready ----
   useEffect(() => {
-    if (payhereData && payhereFormRef.current) {
-      payhereFormRef.current.submit();
+    if (payhereFields && checkoutUrl && payhereFormRef.current) {
+      // Small timeout to ensure React has flushed the hidden form to the DOM
+      const timer = setTimeout(() => {
+        payhereFormRef.current?.submit();
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [payhereData]);
+  }, [payhereFields, checkoutUrl]);
 
+  // ---- Donate handler ----
   const donateHandler = async (e) => {
     e.preventDefault();
-
     if (!selectedCampaign) return;
 
     const finalAmount =
       selectedCampaign.campaignType === "fixed"
         ? selectedCampaign.fixedAmount
-        : amount;
+        : Number(amount);
 
-    if (!finalAmount || Number(finalAmount) <= 0) {
+    if (!finalAmount || finalAmount <= 0) {
       setError("Please enter a valid donation amount.");
       return;
     }
@@ -72,10 +114,21 @@ export default function Campaigns() {
         amount: finalAmount,
       });
 
-      setMessage(res.data.message || "Redirecting to payment gateway...");
-      setPayhereData({ ...res.data.payhere, checkoutUrl: res.data.checkoutUrl });
+      if (!res.data.success || !res.data.payhere) {
+        setError("Failed to get payment details. Please try again.");
+        return;
+      }
+
+      // Store payment info BEFORE redirecting (needed for sandbox return URL fallback)
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(res.data.paymentInfo));
+
+      setMessage("Redirecting to PayHere payment gateway...");
+      setSelectedCampaign(null);
+      setCheckoutUrl(res.data.checkoutUrl);
+      setPayhereFields(res.data.payhere);
+
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Payment initiation failed");
+      setError(err.response?.data?.message || err.message || "Payment initiation failed.");
     } finally {
       setLoading(false);
     }
@@ -83,81 +136,118 @@ export default function Campaigns() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-wide">Campaigns</h1>
-        <p className="text-white/60 mt-1.5 text-xs sm:text-sm font-medium">
-          Donate to fixed, open contribution or event campaigns.
-        </p>
+      {/* Title */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-wide">
+            Campaigns
+          </h1>
+          <p className="text-white/60 mt-1.5 text-xs sm:text-sm font-medium">
+            Donate to fixed or open contribution campaigns.
+          </p>
+        </div>
+        <button
+          onClick={loadCampaigns}
+          className="p-2.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-white/60 hover:text-white"
+          title="Refresh"
+        >
+          <RefreshCw className={`w-4 h-4 ${loadingCampaigns ? "animate-spin" : ""}`} />
+        </button>
       </div>
 
-      {(message || paymentMessage) && (
-        <div className="rounded-xl bg-green-500/20 text-green-200 p-4 border border-green-500/20 text-xs sm:text-sm">
-          {message || paymentMessage}
+      {/* Payment return messages */}
+      {paymentStatus === "success" && (
+        <div className="flex items-center gap-3 rounded-xl bg-emerald-500/15 text-emerald-200 p-4 border border-emerald-500/20 text-sm">
+          <CheckCircle className="w-5 h-5 shrink-0" />
+          Payment completed successfully! Campaign progress has been updated.
+        </div>
+      )}
+      {paymentStatus === "cancel" && (
+        <div className="flex items-center gap-3 rounded-xl bg-amber-500/15 text-amber-200 p-4 border border-amber-500/20 text-sm">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          Payment was canceled or declined. You can try donating again anytime.
         </div>
       )}
 
+      {/* General messages */}
+      {message && (
+        <div className="rounded-xl bg-blue-500/15 text-blue-200 p-4 border border-blue-500/20 text-sm">
+          {message}
+        </div>
+      )}
       {error && (
-        <div className="rounded-xl bg-red-500/20 text-red-200 p-4 border border-red-500/20 text-xs sm:text-sm">
+        <div className="rounded-xl bg-red-500/15 text-red-200 p-4 border border-red-500/20 text-sm">
           {error}
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {campaigns.map((campaign) => {
-          const percentage =
-            campaign.targetAmount > 0
-              ? Math.min(
-                  100,
-                  Math.round(
-                    (campaign.collectedAmount / campaign.targetAmount) * 100
-                  )
-                )
-              : 0;
+      {/* Campaigns grid */}
+      {loadingCampaigns ? (
+        <div className="py-20 text-center text-white/50 text-sm">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto text-gold mb-2" />
+          Loading campaigns...
+        </div>
+      ) : campaigns.length === 0 ? (
+        <div className="py-16 text-center text-white/40 border border-dashed border-white/10 rounded-3xl text-sm bg-white/5">
+          No active campaigns at the moment.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {campaigns.map((campaign) => {
+            const percentage =
+              campaign.targetAmount > 0
+                ? Math.min(100, Math.round((campaign.collectedAmount / campaign.targetAmount) * 100))
+                : 0;
 
-          return (
-            <div
-              key={campaign._id}
-              className="rounded-3xl bg-white/10 border border-white/10 p-6"
-            >
-              <span className="text-xs uppercase tracking-widest text-gold">
-                {campaign.campaignType}
-              </span>
-
-              <h3 className="text-2xl font-bold mt-3">{campaign.name}</h3>
-
-              <p className="text-white/60 mt-3">
-                {campaign.description}
-              </p>
-
-              <div className="mt-5">
-                <div className="flex justify-between text-sm text-white/60">
-                  <span>Rs. {campaign.collectedAmount}</span>
-                  <span>Rs. {campaign.targetAmount}</span>
-                </div>
-
-                <div className="h-3 bg-white/10 rounded-full mt-2 overflow-hidden">
-                  <div
-                    className="h-full bg-gold rounded-full"
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-
-                <p className="text-sm mt-2 text-white/60">
-                  {percentage}% funded
-                </p>
-              </div>
-
-              <button
-                onClick={() => setSelectedCampaign(campaign)}
-                className="w-full mt-6 bg-gold text-black font-bold rounded-xl py-3"
+            return (
+              <div
+                key={campaign._id}
+                className="rounded-3xl bg-white/5 border border-white/10 p-6 hover:border-white/20 hover:bg-white/10 transition-all duration-300 space-y-4 flex flex-col"
               >
-                Donate Now
-              </button>
-            </div>
-          );
-        })}
-      </div>
+                <div>
+                  <span className="text-xs uppercase tracking-widest text-gold font-bold">
+                    {campaign.campaignType}
+                  </span>
+                  <h3 className="text-xl font-bold mt-2 text-white">{campaign.name}</h3>
+                  <p className="text-white/60 mt-2 text-sm leading-relaxed">
+                    {campaign.description}
+                  </p>
+                </div>
 
+                {/* Progress */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs text-white/50 font-medium">
+                    <span>Rs. {campaign.collectedAmount.toLocaleString()} raised</span>
+                    <span>Goal: Rs. {campaign.targetAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gold rounded-full transition-all duration-500"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-white/40">{percentage}% funded</p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setSelectedCampaign(campaign);
+                    setAmount("");
+                    setError("");
+                    setMessage("");
+                  }}
+                  className="mt-auto w-full bg-gold hover:bg-yellow-400 text-black font-bold rounded-xl py-3 text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <HeartHandshake className="w-4 h-4" />
+                  Donate Now
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ===== Donate Modal ===== */}
       {selectedCampaign && (
         <div className="fixed inset-0 bg-black/80 grid place-items-center p-4 z-50 backdrop-blur-sm">
           <form
@@ -176,11 +266,15 @@ export default function Campaigns() {
             {selectedCampaign.campaignType === "fixed" ? (
               <div className="bg-white/5 border border-white/5 rounded-xl p-4 text-center">
                 <span className="text-xs text-white/40 block uppercase tracking-wider font-semibold">Fixed Amount</span>
-                <span className="text-xl font-black text-white mt-1 block">Rs. {selectedCampaign.fixedAmount.toLocaleString()}</span>
+                <span className="text-2xl font-black text-white mt-1 block">
+                  Rs. {selectedCampaign.fixedAmount.toLocaleString()}
+                </span>
               </div>
             ) : (
               <div>
-                <label className="text-xs text-white/50 font-bold uppercase tracking-wider block mb-2">Donation Amount (LKR)</label>
+                <label className="text-xs text-white/50 font-bold uppercase tracking-wider block mb-2">
+                  Donation Amount (LKR)
+                </label>
                 <input
                   type="number"
                   min="1"
@@ -193,12 +287,27 @@ export default function Campaigns() {
               </div>
             )}
 
-            <div className="flex gap-3 pt-2">
-              <button 
-                disabled={loading} 
-                className="flex-grow bg-gold hover:bg-gold-hover text-black font-bold rounded-xl py-3.5 text-sm transition-all disabled:opacity-50 cursor-pointer shadow-lg shadow-gold/10"
+            {error && (
+              <p className="text-red-400 text-xs font-medium">{error}</p>
+            )}
+
+            <div className="flex gap-3 pt-1">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-grow bg-gold hover:bg-yellow-400 text-black font-bold rounded-xl py-3.5 text-sm transition-all disabled:opacity-50 cursor-pointer shadow-lg shadow-gold/10 flex items-center justify-center gap-2"
               >
-                {loading ? "Processing..." : "Confirm Donation"}
+                {loading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <HeartHandshake className="w-4 h-4" />
+                    Confirm Donation
+                  </>
+                )}
               </button>
 
               <button
@@ -213,13 +322,17 @@ export default function Campaigns() {
         </div>
       )}
 
-      {payhereData?.checkoutUrl && (
-        <form ref={payhereFormRef} action={payhereData.checkoutUrl} method="post" className="hidden">
-          {Object.entries(payhereData).map(([name, value]) =>
-            name === "checkoutUrl" ? null : (
-              <input key={name} type="hidden" name={name} value={value} />
-            )
-          )}
+      {/* ===== Hidden PayHere Form (submits automatically) ===== */}
+      {payhereFields && checkoutUrl && (
+        <form
+          ref={payhereFormRef}
+          action={checkoutUrl}
+          method="POST"
+          className="hidden"
+        >
+          {Object.entries(payhereFields).map(([name, value]) => (
+            <input key={name} type="hidden" name={name} value={value} />
+          ))}
         </form>
       )}
     </div>
