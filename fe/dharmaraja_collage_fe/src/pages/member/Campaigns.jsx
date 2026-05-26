@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../../api/axios";
-import { HeartHandshake, RefreshCw, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { HeartHandshake, RefreshCw, CheckCircle, AlertCircle, Trophy } from "lucide-react";
+
 
 const SESSION_KEY = "payhere_campaign_info";
 
@@ -199,12 +200,27 @@ export default function Campaigns() {
                 ? Math.min(100, Math.round((campaign.collectedAmount / campaign.targetAmount) * 100))
                 : 0;
 
+            const isCompleted =
+              campaign.status === "completed" ||
+              (campaign.targetAmount > 0 && campaign.collectedAmount >= campaign.targetAmount);
+
             return (
               <div
                 key={campaign._id}
-                className="rounded-3xl bg-white/5 border border-white/10 p-6 hover:border-white/20 hover:bg-white/10 transition-all duration-300 space-y-4 flex flex-col"
+                className={`rounded-3xl border p-6 transition-all duration-300 space-y-4 flex flex-col ${
+                  isCompleted
+                    ? "bg-emerald-500/[0.04] border-emerald-500/25"
+                    : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
+                }`}
               >
                 <div>
+                  {/* Completed banner */}
+                  {isCompleted && (
+                    <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-xs font-bold">
+                      <Trophy className="w-4 h-4 shrink-0" />
+                      Goal Reached! This campaign has been fully funded.
+                    </div>
+                  )}
                   <span className="text-xs uppercase tracking-widest text-gold font-bold">
                     {campaign.campaignType}
                   </span>
@@ -222,25 +238,40 @@ export default function Campaigns() {
                   </div>
                   <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gold rounded-full transition-all duration-500"
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        isCompleted ? "bg-emerald-400" : "bg-gold"
+                      }`}
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
-                  <p className="text-xs text-white/40">{percentage}% funded</p>
+                  <p className={`text-xs ${isCompleted ? "text-emerald-400 font-semibold" : "text-white/40"}`}>
+                    {isCompleted ? `✓ 100% funded — Goal reached!` : `${percentage}% funded`}
+                  </p>
                 </div>
 
-                <button
-                  onClick={() => {
-                    setSelectedCampaign(campaign);
-                    setAmount("");
-                    setError("");
-                    setMessage("");
-                  }}
-                  className="mt-auto w-full bg-gold hover:bg-yellow-400 text-black font-bold rounded-xl py-3 text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <HeartHandshake className="w-4 h-4" />
-                  Donate Now
-                </button>
+                {/* Donate button — disabled when completed */}
+                {isCompleted ? (
+                  <button
+                    disabled
+                    className="mt-auto w-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 font-bold rounded-xl py-3 text-sm flex items-center justify-center gap-2 cursor-not-allowed"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Goal Reached
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setSelectedCampaign(campaign);
+                      setAmount("");
+                      setError("");
+                      setMessage("");
+                    }}
+                    className="mt-auto w-full bg-gold hover:bg-yellow-400 text-black font-bold rounded-xl py-3 text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <HeartHandshake className="w-4 h-4" />
+                    Donate Now
+                  </button>
+                )}
               </div>
             );
           })}

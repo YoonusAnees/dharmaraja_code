@@ -26,11 +26,14 @@ const userSchema = new mongoose.Schema(
       default: "pending",
     },
 
-    badge: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Badge",
-      default: null,
-    },
+    // Badge history — each purchase is recorded with its expiry date
+    badgeHistory: [
+      {
+        badge: { type: mongoose.Schema.Types.ObjectId, ref: "Badge" },
+        purchasedAt: { type: Date, default: Date.now },
+        expiresAt: { type: Date, default: null }, // null = no expiry (lifetime)
+      },
+    ],
     events: [
       {
         type: mongoose.Schema.Types.ObjectId,

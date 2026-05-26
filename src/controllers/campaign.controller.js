@@ -46,7 +46,17 @@ export const createCampaign = async (req, res, next) => {
 
 export const getCampaigns = async (req, res, next) => {
   try {
-    const campaigns = await Campaign.find({ status: "active" }).sort("-createdAt");
+    let filter = {};
+
+    if (req.user?.role === "admin") {
+      // Admin sees everything — active, completed, inactive
+      filter = {};
+    } else {
+      // Members see active campaigns + completed ones (so they can see closed ones)
+      filter = { status: { $in: ["active", "completed"] } };
+    }
+
+    const campaigns = await Campaign.find(filter).sort("-createdAt");
     res.json({ success: true, campaigns });
   } catch (error) {
     next(error);

@@ -83,7 +83,7 @@ export default function MemberLayout() {
           <NotificationBell />
 
           <div className="text-right">
-            <p className="text-sm font-bold">Hi! {user?.fullName}</p>
+            <p className="text-sm font-bold">Hi, {user?.fullName}</p>
             <p className="text-xs text-white/40">Dharmaraja College OBA</p>
           </div>
         </header>

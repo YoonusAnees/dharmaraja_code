@@ -103,9 +103,21 @@ const fulfillPayment = async (payment) => {
       });
 
       // Atomic increment — safe against race conditions
-      await Campaign.findByIdAndUpdate(payment.item, {
-        $inc: { collectedAmount: payment.amount },
-      });
+      const updatedCampaign = await Campaign.findByIdAndUpdate(
+        payment.item,
+        { $inc: { collectedAmount: payment.amount } },
+        { new: true } // return updated doc
+      );
+
+      // Auto-complete campaign when target is reached
+      if (
+        updatedCampaign &&
+        updatedCampaign.targetAmount > 0 &&
+        updatedCampaign.collectedAmount >= updatedCampaign.targetAmount &&
+        updatedCampaign.status !== "completed"
+      ) {
+        await Campaign.findByIdAndUpdate(payment.item, { $set: { status: "completed" } });
+      }
     } catch (dupErr) {
       if (dupErr.code === 11000) {
         console.log(`Duplicate donation skipped for orderId: ${payment.orderId}`);
@@ -116,10 +128,33 @@ const fulfillPayment = async (payment) => {
   }
 
   if (payment.type === "badge") {
+    const badge = await Badge.findById(payment.item);
     const user = await User.findById(payment.user);
-    if (user) {
-      user.badge = payment.item;
-      await user.save();
+    if (user && badge) {
+      const now = new Date();
+
+      // Guard: reject if user already has an active (non-expired) copy of this badge
+      const alreadyActive = user.badgeHistory.some((entry) => {
+        const isSameBadge = entry.badge.toString() === payment.item.toString();
+        const notExpired = !entry.expiresAt || entry.expiresAt > now;
+        return isSameBadge && notExpired;
+      });
+
+      if (!alreadyActive) {
+        // Compute expiry date
+        let expiresAt = null;
+        if (badge.durationMonths && badge.durationMonths > 0) {
+          expiresAt = new Date(now);
+          expiresAt.setMonth(expiresAt.getMonth() + badge.durationMonths);
+        }
+
+        user.badgeHistory.push({
+          badge: payment.item,
+          purchasedAt: now,
+          expiresAt,
+        });
+        await user.save();
+      }
     }
   }
 
