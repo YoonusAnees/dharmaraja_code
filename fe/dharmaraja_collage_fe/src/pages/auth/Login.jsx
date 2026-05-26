@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 import { Mail, Lock, LogIn, RefreshCw } from "lucide-react";
+import image from "/dc_logo.png";
+
 
 export default function Login() {
   const { login } = useAuth();
@@ -48,10 +50,10 @@ export default function Login() {
         {/* Logo/Branding */}
         <div className="text-center space-y-2">
           <div className="inline-flex p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-gold animate-pulse">
-            <LogIn className="w-6 h-6" />
+            <img src={image} alt="Logo" className="w-6 h-6" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wider uppercase">
-            OBAMS <span className="text-gold">Login</span>
+            DHARMARAJA COLLAGE OBA <span className="text-gold">Login</span>
           </h1>
           <p className="text-white/40 text-xs font-semibold tracking-wide uppercase">
             Old Boys Association Management System

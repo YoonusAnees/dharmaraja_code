@@ -1,13 +1,56 @@
+// models/User.js
+
 import mongoose from "mongoose";
+
+const badgeHistorySchema = new mongoose.Schema({
+  badge: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Badge",
+    required: true,
+  },
+
+  purchasedAt: {
+    type: Date,
+    default: Date.now,
+  },
+
+  expiresAt: {
+    type: Date,
+    default: null,
+  },
+});
 
 const userSchema = new mongoose.Schema(
   {
-    fullName: { type: String, required: true },
-    email: { type: String, required: true, unique: true, lowercase: true },
-    contactNumber: { type: String },
-    batchYear: { type: String },
-    branch: { type: String },
-    password: { type: String, required: true, select: false },
+    fullName: {
+      type: String,
+      required: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+    },
+
+    contactNumber: {
+      type: String,
+    },
+
+    batchYear: {
+      type: String,
+    },
+
+    branch: {
+      type: String,
+    },
+
+    password: {
+      type: String,
+      required: true,
+      select: false,
+    },
 
     registrationFeePaid: {
       type: Boolean,
@@ -20,20 +63,33 @@ const userSchema = new mongoose.Schema(
       default: "member",
     },
 
+    nic: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
+    address: {
+      type: String,
+    },
+
+    jobTitle: {
+      type: String,
+    },
+
+    profilePicture: {
+      type: String,
+    },
+
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
 
-    // Badge history — each purchase is recorded with its expiry date
-    badgeHistory: [
-      {
-        badge: { type: mongoose.Schema.Types.ObjectId, ref: "Badge" },
-        purchasedAt: { type: Date, default: Date.now },
-        expiresAt: { type: Date, default: null }, // null = no expiry (lifetime)
-      },
-    ],
+    // Badge purchase history
+    badgeHistory: [badgeHistorySchema],
+
     events: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -41,7 +97,11 @@ const userSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-export default mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+
+export default User;

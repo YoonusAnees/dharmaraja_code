@@ -26,7 +26,8 @@ const campaignSchema = new mongoose.Schema(
       default: 0,
     },
 
-    deadline: Date,
+    startDate: Date,
+    endDate: Date,
     image: String,
 
     status: {

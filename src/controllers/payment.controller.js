@@ -179,7 +179,7 @@ const createOrderId = () => new mongoose.Types.ObjectId().toString();
 // ─────────────────────────────────────────────────────────────────────────────
 export const initiateRegistrationPayment = async (req, res, next) => {
   try {
-    const { fullName, email, contactNumber, batchYear, password } = req.body;
+    const { fullName, email, contactNumber, batchYear, password,address,nic,jobTitle } = req.body;
 
     if (!fullName || !email || !password) {
       return res.status(400).json({ message: "Full name, email and password are required" });
@@ -199,6 +199,9 @@ export const initiateRegistrationPayment = async (req, res, next) => {
       password: hashedPassword,
       status: "pending",
       role: "member",
+      address,
+      nic,
+      jobTitle,
       registrationFeePaid: false,
     });
 
@@ -277,6 +280,15 @@ export const createCheckoutPayment = async (req, res, next) => {
       if (!campaign) return res.status(404).json({ message: "Campaign not found" });
       finalAmount = campaign.campaignType === "fixed" ? campaign.fixedAmount : Number(requestedAmount);
       if (!finalAmount || finalAmount <= 0) return res.status(400).json({ message: "Invalid donation amount" });
+
+      const now = new Date();
+      if (campaign.startDate && now < campaign.startDate) {
+        return res.status(400).json({ message: "Campaign has not started yet" });
+      }
+      if (campaign.endDate && now > new Date(campaign.endDate).setHours(23, 59, 59, 999)) {
+        return res.status(400).json({ message: "Campaign has ended" });
+      }
+
       description = `Donation to ${campaign.name}`;
     }
 
@@ -517,15 +529,28 @@ export const completePaymentSuccessReturn = async (req, res, next) => {
       return res.json({ success: true, message: "Payment already marked as paid" });
     }
 
+    // Mark paid and fulfill immediately since we are returning from PayHere success URL
     payment.status = "paid";
-    payment.payhereReference = payment.payhereReference || `sandbox_return_${Date.now()}`;
     await payment.save();
-
+    
     await fulfillPayment(payment);
-
-    res.json({ success: true, message: "Payment successfully completed" });
+    
+    res.json({ success: true, message: "Payment completed successfully!" });
   } catch (error) {
-    next(error);
+    if (error.code === 11000) {
+      // Duplicate key error due to concurrent requests (e.g., React StrictMode double rendering)
+      // The other concurrent request successfully processed it.
+      return res.json({ 
+        success: true, 
+        message: "Payment completed successfully! (concurrent request handled)" 
+      });
+    }
+    console.error("completePaymentSuccessReturn ERROR:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || "Unknown error",
+      stack: error.stack
+    });
   }
 };
 

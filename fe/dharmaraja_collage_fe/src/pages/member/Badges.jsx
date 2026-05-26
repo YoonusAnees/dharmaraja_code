@@ -69,7 +69,7 @@ export default function Badges() {
             amount: stored?.amount,
           });
         } catch (err) {
-          console.error("complete-success error:", err);
+          console.error("complete-success error:", err.response?.data || err);
         }
         sessionStorage.removeItem(SESSION_KEY);
       }

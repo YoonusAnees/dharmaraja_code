@@ -5,10 +5,16 @@ import { createNotification } from "../services/notification.service.js";
 
 export const createCampaign = async (req, res, next) => {
   try {
-    const campaign = await Campaign.create({
+    const campaignData = {
       ...req.body,
       createdBy: req.user._id,
-    });
+    };
+
+    if (req.file) {
+      campaignData.image = req.file.path;
+    }
+
+    const campaign = await Campaign.create(campaignData);
 
     await createNotification({
       title: "New Campaign",

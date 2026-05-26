@@ -14,6 +14,7 @@ import {
   Users,
   User,
 } from "lucide-react";
+import image from "/dc_logo.png";
 
 export default function MemberLayout() {
   const { logout } = useAuth();
@@ -41,8 +42,8 @@ export default function MemberLayout() {
       <aside className="hidden md:flex flex-col w-72 bg-emerald-950 border-r border-white/5 h-screen sticky top-0 p-6 justify-between shrink-0">
 
         <div className="space-y-8">
-          <Link to="/member" className="flex items-center gap-2">
-            <span className="text-2xl font-black text-gold tracking-wider">OBAMS OBA</span>
+          <Link to="/member" className="flex items-center justify-center gap-2">
+            <img src={image} alt="OBAMS OBA" className="w-30 h-30" />
           </Link>
 
           <nav className="space-y-1.5">
@@ -53,8 +54,8 @@ export default function MemberLayout() {
                   key={href}
                   to={href}
                   className={`flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition-all ${isActive
-                      ? "bg-gold text-black font-bold shadow-lg"
-                      : "text-white/70 hover:bg-white/5 hover:text-white"
+                    ? "bg-gold text-black font-bold shadow-lg"
+                    : "text-white/70 hover:bg-white/5 hover:text-white"
                     }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -82,21 +83,52 @@ export default function MemberLayout() {
           {/* NotificationBell handles all fetch, mark-as-read, count, dropdown */}
           <NotificationBell />
 
-          <div className="text-right">
-            <p className="text-sm font-bold">Hi, {user?.fullName}</p>
-            <p className="text-xs text-white/40">Dharmaraja College OBA</p>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-sm font-bold">Hi, {user?.fullName}</p>
+              <p className="text-xs text-white/40">Dharmaraja College OBA</p>
+            </div>
+
+            <Link to="/member/profile">
+              {user?.profilePicture ? (
+                <img
+                  src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profilePicture}`}
+                  alt="Avatar"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-gold shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center border-2 border-gold/50 text-gold font-bold shrink-0">
+                  {user?.fullName?.charAt(0)?.toUpperCase()}
+                </div>
+
+              )}
+            </Link>
           </div>
         </header>
 
         {/* ================= MOBILE HEADER ================= */}
         <header className="md:hidden sticky top-0 z-40 bg-emerald-950/95 backdrop-blur border-b border-white/10 px-6 py-4 flex items-center justify-between">
           <Link to="/member">
-            <span className="text-xl font-black text-gold">OBAMS OBA</span>
+            <img src={image} alt="OBAMS OBA" className="w-12 h-12" />
           </Link>
 
           <div className="flex items-center gap-3">
             {/* Same NotificationBell component — works on mobile too */}
             <NotificationBell />
+
+            <Link to="/member/profile">
+              {user?.profilePicture ? (
+                <img
+                  src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profilePicture}`}
+                  alt="Avatar"
+                  className="w-8 h-8 rounded-full object-cover border border-gold shrink-0"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center border border-gold/50 text-gold font-bold shrink-0 text-xs">
+                  {user?.fullName?.charAt(0)?.toUpperCase()}
+                </div>
+              )}
+            </Link>
 
             <button
               onClick={logout}
@@ -111,7 +143,7 @@ export default function MemberLayout() {
         {liveNotification && (
           <div
             onClick={() => navigate("/member/notifications")}
-            className="mx-6 mt-4 p-3 bg-gold text-black font-bold rounded-xl cursor-pointer hover:bg-yellow-400 transition-colors flex items-center gap-2"
+            className="mx-6 mt-4 p-3 bg-gold text-black font-bold rounded-xl cursor-pointer hover:bg-yellow-400  transition-colors flex items-center gap-2"
           >
             <Bell className="w-4 h-4 shrink-0" />
             {liveNotification.title}: {liveNotification.message}

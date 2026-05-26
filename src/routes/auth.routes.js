@@ -16,6 +16,7 @@ import {
 } from "../controllers/auth.controller.js";
 import { protect, protectMe } from "../middlewares/auth.middleware.js";
 import { adminOnly } from "../middlewares/role.middleware.js";
+import { upload, processImage } from "../middlewares/upload.middleware.js";
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ router.post("/refresh", refresh);
 router.post("/logout", logout);
 
 router.get("/me", protectMe, me);
-router.put("/me", protect, updateProfile);
+router.put("/me", protect, upload.single("profilePicture"), processImage, updateProfile);
 router.get("/members/directory", protect, getMembersDirectory);
 router.get("/members", protect, adminOnly, getMembers);
 router.patch("/approve/:id", protect, adminOnly, approveMember);

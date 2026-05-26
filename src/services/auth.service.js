@@ -20,6 +20,9 @@ export const registerUser = async (data) => {
     status: "pending",
     role: "member",
     registrationFeePaid: false,
+    address: data.address,
+    nic: data.nic,
+    jobTitle: data.jobTitle,
   });
 
   return user;
@@ -43,6 +46,7 @@ export const approveUser = async (userId) => {
         name: user.fullName,
         email: user.email,
         password: "Your chosen password",
+        
       }),
     });
   } catch (emailError) {

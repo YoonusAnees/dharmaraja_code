@@ -207,6 +207,22 @@ export default function MemberDashboard() {
               <span className="font-semibold text-white">{user?.branch}</span>
             </div>
           )}
+          
+            <div className="bg-slate-950/20 p-2.5 rounded-xl border border-white/5">
+            <span className="text-white/40 block text-[10px] uppercase font-bold tracking-wider">Job Role</span>
+            <span className="font-semibold text-white capitalize">{user?.jobTitle}</span>
+          </div>
+
+            <div className="bg-slate-950/20 p-2.5 rounded-xl border border-white/5">
+            <span className="text-white/40 block text-[10px] uppercase font-bold tracking-wider">NIC</span>
+            <span className="font-semibold text-white capitalize">{user?.nic}</span>
+          </div>
+
+            <div className="bg-slate-950/20 p-2.5 rounded-xl border border-white/5">
+            <span className="text-white/40 block text-[10px] uppercase font-bold tracking-wider">Address</span>
+            <span className="font-semibold text-white capitalize">{user?.address}</span>
+          </div>
+         
         </div>
       </div>
 

@@ -3,13 +3,15 @@ import api from "../../api/axios";
 
 export default function ManageCampaigns() {
   const [campaigns, setCampaigns] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
   const [form, setForm] = useState({
     name: "",
     description: "",
     campaignType: "fixed",
     fixedAmount: "",
     targetAmount: "",
-    deadline: "",
+    startDate: "",
+    endDate: "",
   });
 
   const loadCampaigns = async () => {
@@ -23,15 +25,30 @@ export default function ManageCampaigns() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    await api.post("/campaigns", form);
+    
+    const formData = new FormData();
+    Object.keys(form).forEach((key) => formData.append(key, form[key]));
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+
+    await api.post("/campaigns", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    
     setForm({
       name: "",
       description: "",
       campaignType: "fixed",
       fixedAmount: "",
       targetAmount: "",
-      deadline: "",
+      startDate: "",
+      endDate: "",
     });
+    setImageFile(null);
+    if (document.getElementById("campaignImageInput")) {
+      document.getElementById("campaignImageInput").value = "";
+    }
     loadCampaigns();
   };
 
@@ -50,9 +67,23 @@ export default function ManageCampaigns() {
 
         <input placeholder="Fixed Amount" value={form.fixedAmount} onChange={(e) => setForm({ ...form, fixedAmount: e.target.value })} />
         <input placeholder="Target Amount" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })} />
-        <input type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
+        <div className="flex gap-2">
+          <input type="date" className="w-full" title="Start Date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
+          <input type="date" className="w-full" title="End Date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
+        </div>
 
         <textarea className="md:col-span-2" placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+
+        <div className="md:col-span-2 bg-white/5 p-4 rounded-xl">
+          <label className="block text-sm font-bold text-white/60 mb-2">Campaign Image</label>
+          <input 
+            id="campaignImageInput"
+            type="file" 
+            accept="image/*" 
+            onChange={(e) => setImageFile(e.target.files[0])} 
+            className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold file:text-black hover:file:bg-yellow-400"
+          />
+        </div>
 
         <button className="bg-gold text-black font-bold rounded-xl py-3 md:col-span-2">
           Create Campaign

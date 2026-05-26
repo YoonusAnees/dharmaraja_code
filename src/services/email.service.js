@@ -38,6 +38,7 @@ export const emailTemplate = ({ title, body, buttonText, buttonUrl }) => {
   <div style="font-family:Arial,sans-serif;background:#f4f7fb;padding:30px;">
     <div style="max-width:650px;margin:auto;background:white;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;">
       <div style="background:#073b2e;color:white;padding:24px;text-align:center;">
+        <img src="${process.env.BACKEND_URL}/email/dc_logo.png" alt="OBA Logo" style="width:80px;height:auto;margin-bottom:15px;display:inline-block;" />
         <h2 style="margin:0;">Dharmaraja College Old Boys Association</h2>
         <p style="margin:8px 0 0;color:#d1fae5;">OBAMS Notification</p>
       </div>
@@ -48,15 +49,14 @@ export const emailTemplate = ({ title, body, buttonText, buttonUrl }) => {
           ${body}
         </div>
 
-        ${
-          buttonText && buttonUrl
-            ? `<div style="margin-top:25px;">
+        ${buttonText && buttonUrl
+      ? `<div style="margin-top:25px;">
                 <a href="${buttonUrl}" style="background:#047857;color:white;text-decoration:none;padding:12px 20px;border-radius:10px;display:inline-block;">
                   ${buttonText}
                 </a>
               </div>`
-            : ""
-        }
+      : ""
+    }
       </div>
 
       <div style="background:#f9fafb;padding:18px;text-align:center;color:#6b7280;font-size:13px;">

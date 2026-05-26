@@ -223,8 +223,8 @@ export const getMembersDirectory = async (req, res, next) => {
   try {
     // Fetch all approved member accounts, populating their badge and events
     const members = await User.find({ role: "member", status: "approved" })
-      .select("fullName email contactNumber batchYear branch badge events createdAt")
-      .populate("badge")
+      .select("fullName email contactNumber batchYear branch badgeHistory events createdAt")
+      .populate("badgeHistory.badge")
       .populate("events")
       .sort("fullName");
 
@@ -241,7 +241,7 @@ export const getMembersDirectory = async (req, res, next) => {
           contactNumber: member.contactNumber,
           batchYear: member.batchYear,
           branch: member.branch,
-          badge: member.badge,
+          badgeHistory: member.badgeHistory,
           events: member.events,
           createdAt: member.createdAt,
           donations,
@@ -271,6 +271,10 @@ export const updateProfile = async (req, res, next) => {
     if (contactNumber !== undefined) user.contactNumber = contactNumber;
     if (batchYear !== undefined) user.batchYear = batchYear;
     if (branch !== undefined) user.branch = branch;
+
+    if (req.file) {
+      user.profilePicture = req.file.path;
+    }
 
     if (password) {
       user.password = await bcrypt.hash(password, 12);

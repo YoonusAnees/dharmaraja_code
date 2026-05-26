@@ -204,16 +204,29 @@ export default function Campaigns() {
               campaign.status === "completed" ||
               (campaign.targetAmount > 0 && campaign.collectedAmount >= campaign.targetAmount);
 
+            const now = new Date();
+            const hasNotStarted = campaign.startDate && now < new Date(campaign.startDate);
+            const hasEnded = campaign.endDate && now > new Date(new Date(campaign.endDate).setHours(23, 59, 59, 999));
+
             return (
               <div
                 key={campaign._id}
-                className={`rounded-3xl border p-6 transition-all duration-300 space-y-4 flex flex-col ${
+                className={`rounded-3xl border overflow-hidden transition-all duration-300 flex flex-col shadow-xl ${
                   isCompleted
                     ? "bg-emerald-500/[0.04] border-emerald-500/25"
                     : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
                 }`}
               >
-                <div>
+                {campaign.image && (
+                  <img
+                    src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${campaign.image}`}
+                    alt={campaign.name}
+                    loading="lazy"
+                    className="w-full h-48 object-cover border-b border-white/5"
+                  />
+                )}
+                <div className="p-6 space-y-4 flex flex-col flex-1">
+                  <div>
                   {/* Completed banner */}
                   {isCompleted && (
                     <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-xs font-bold">
@@ -258,6 +271,22 @@ export default function Campaigns() {
                     <CheckCircle className="w-4 h-4" />
                     Goal Reached
                   </button>
+                ) : hasEnded ? (
+                  <button
+                    disabled
+                    className="mt-auto w-full bg-red-500/15 text-red-400 border border-red-500/25 font-bold rounded-xl py-3 text-sm flex items-center justify-center gap-2 cursor-not-allowed"
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    Campaign Ended
+                  </button>
+                ) : hasNotStarted ? (
+                  <button
+                    disabled
+                    className="mt-auto w-full bg-gray-500/15 text-gray-400 border border-gray-500/25 font-bold rounded-xl py-3 text-sm flex items-center justify-center gap-2 cursor-not-allowed"
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    Not Started Yet
+                  </button>
                 ) : (
                   <button
                     onClick={() => {
@@ -272,6 +301,7 @@ export default function Campaigns() {
                     Donate Now
                   </button>
                 )}
+                </div>
               </div>
             );
           })}

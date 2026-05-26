@@ -14,6 +14,9 @@ export default function Profile() {
     confirmPassword: "",
   });
 
+  const [profilePictureFile, setProfilePictureFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(user?.profilePicture ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profilePicture}` : null);
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -31,12 +34,18 @@ export default function Profile() {
     setLoading(true);
 
     try {
-      const res = await api.put("/auth/me", {
-        fullName: form.fullName,
-        contactNumber: form.contactNumber,
-        batchYear: form.batchYear,
-        branch: form.branch,
-        password: form.password || undefined,
+      const formData = new FormData();
+      Object.keys(form).forEach((key) => {
+        if (form[key] !== undefined && form[key] !== "") {
+          formData.append(key, form[key]);
+        }
+      });
+      if (profilePictureFile) {
+        formData.append("profilePicture", profilePictureFile);
+      }
+
+      const res = await api.put("/auth/me", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       setMessage(res.data.message || "Profile updated successfully!");
@@ -75,6 +84,36 @@ export default function Profile() {
         <form onSubmit={submitHandler} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             
+            {/* Profile Picture */}
+            <div className="sm:col-span-2 flex flex-col items-center sm:items-start gap-4">
+              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Profile Picture</label>
+              <div className="flex items-center gap-5">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gold/50 bg-slate-800 flex items-center justify-center shrink-0">
+                  {previewUrl ? (
+                    <img src={previewUrl} alt="Profile" loading="lazy" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-10 h-10 text-white/20" />
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="file"
+                    id="profilePictureInput"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setProfilePictureFile(file);
+                        setPreviewUrl(URL.createObjectURL(file));
+                      }
+                    }}
+                    className="block w-full text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-gold file:text-black hover:file:bg-yellow-400 transition-all cursor-pointer"
+                  />
+                  <p className="text-[10px] text-white/40 mt-2 font-medium">Upload a square image. Max size 2MB.</p>
+                </div>
+              </div>
+            </div>
+
             {/* Full Name */}
             <div className="space-y-1.5 sm:col-span-2">
               <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Full Name</label>

@@ -3,6 +3,7 @@ import api from "../../api/axios";
 
 export default function ManageEvents() {
   const [events, setEvents] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -22,11 +23,21 @@ export default function ManageEvents() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    await api.post("/events", {
-      ...form,
-      fee: Number(form.fee) || 0,
+
+    const formData = new FormData();
+    Object.keys(form).forEach((key) => formData.append(key, form[key]));
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+    
+    await api.post("/events", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
     setForm({ title: "", description: "", eventDate: "", location: "", fee: "" });
+    setImageFile(null);
+    if (document.getElementById("eventImageInput")) {
+      document.getElementById("eventImageInput").value = "";
+    }
     loadEvents();
   };
 
@@ -44,8 +55,18 @@ export default function ManageEvents() {
           value={form.fee}
           onChange={(e) => setForm({ ...form, fee: e.target.value })}
         />
-        <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+        <textarea className="md:col-span-2" placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
 
+        <div className="md:col-span-2 bg-white/5 p-4 rounded-xl">
+          <label className="block text-sm font-bold text-white/60 mb-2">Event Image</label>
+          <input 
+            id="eventImageInput"
+            type="file" 
+            accept="image/*" 
+            onChange={(e) => setImageFile(e.target.files[0])} 
+            className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold file:text-black hover:file:bg-yellow-400"
+          />
+        </div>
         <button className="bg-gold text-black font-bold rounded-xl py-3 md:col-span-2">
           Create Event
         </button>
