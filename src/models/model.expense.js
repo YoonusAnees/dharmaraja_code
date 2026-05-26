@@ -5,7 +5,10 @@ const expenseSchema = new mongoose.Schema(
     campaign: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Campaign",
-      required: true,
+    },
+    event: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
     },
     title: { type: String, required: true },
     description: String,

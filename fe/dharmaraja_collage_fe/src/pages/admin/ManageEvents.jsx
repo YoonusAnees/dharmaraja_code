@@ -10,6 +10,7 @@ export default function ManageEvents() {
     eventDate: "",
     location: "",
     fee: "",
+    budget: "",
   });
 
   const loadEvents = async () => {
@@ -33,7 +34,7 @@ export default function ManageEvents() {
     await api.post("/events", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    setForm({ title: "", description: "", eventDate: "", location: "", fee: "" });
+    setForm({ title: "", description: "", eventDate: "", location: "", fee: "", budget: "" });
     setImageFile(null);
     if (document.getElementById("eventImageInput")) {
       document.getElementById("eventImageInput").value = "";
@@ -54,6 +55,12 @@ export default function ManageEvents() {
           placeholder="Event Fee (Rs.)"
           value={form.fee}
           onChange={(e) => setForm({ ...form, fee: e.target.value })}
+        />
+        <input
+          type="number"
+          placeholder="Budget Allocation (Rs.)"
+          value={form.budget}
+          onChange={(e) => setForm({ ...form, budget: e.target.value })}
         />
         <textarea className="md:col-span-2" placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
 
@@ -78,6 +85,7 @@ export default function ManageEvents() {
             <h3 className="text-xl font-bold">{event.title}</h3>
             <p className="text-white/60">{event.location}</p>
             <p className="text-gold mt-2">{event.eventDate?.slice(0, 10)}</p>
+            {event.budget > 0 && <p className="text-emerald-400 font-bold mt-2 text-sm">Budget: Rs. {event.budget}</p>}
           </div>
         ))}
       </div>
