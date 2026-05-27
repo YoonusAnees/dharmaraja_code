@@ -447,7 +447,7 @@ export default function AdminDashboard() {
                     </td>
 
                     {/* BATCH */}
-                    <td className="py-5 px-4">
+                    <td className="py-5 px-4 ">
                       <div className="text-white text-sm">
                         {member.batchYear || "N/A"}
                       </div>

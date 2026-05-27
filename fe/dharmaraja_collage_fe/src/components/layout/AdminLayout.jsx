@@ -74,7 +74,8 @@ export default function AdminLayout() {
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-sm font-bold text-white">Administrator</p>
-              <p className="text-xs text-white/40">OBAMS Control Panel</p>
+              <p className="text-xs text-white/40">Dharmaraja College Old Boys Association</p>
+              <p className="text-xs text-white/40">{user.branch} Branch</p>
             </div>
             <Link to="/admin/profile">
               {user?.profilePicture ? (

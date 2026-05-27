@@ -213,11 +213,10 @@ export default function Campaigns() {
             return (
               <div
                 key={campaign._id}
-                className={`rounded-3xl border overflow-hidden transition-all duration-300 flex flex-col shadow-xl ${
-                  isCompleted
+                className={`rounded-3xl border overflow-hidden transition-all duration-300 flex flex-col shadow-xl ${isCompleted
                     ? "bg-emerald-500/[0.04] border-emerald-500/25"
                     : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
-                }`}
+                  }`}
               >
                 {campaign.image && (
                   <img
@@ -229,80 +228,79 @@ export default function Campaigns() {
                 )}
                 <div className="p-6 space-y-4 flex flex-col flex-1">
                   <div>
-                  {/* Completed banner */}
-                  {isCompleted && (
-                    <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-xs font-bold">
-                      <Trophy className="w-4 h-4 shrink-0" />
-                      Goal Reached! This campaign has been fully funded.
+                    {/* Completed banner */}
+                    {isCompleted && (
+                      <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 text-xs font-bold">
+                        <Trophy className="w-4 h-4 shrink-0" />
+                        Goal Reached! This campaign has been fully funded.
+                      </div>
+                    )}
+                    <span className="text-xs uppercase tracking-widest text-gold font-bold">
+                      {campaign.campaignType} Campaign
+                    </span>
+                    <h3 className="text-xl font-bold mt-2 text-white">{campaign.name}</h3>
+                    <p className="text-white/60 mt-2 text-sm leading-relaxed">
+                      {campaign.description}
+                    </p>
+                  </div>
+
+                  {/* Progress */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs text-white/50 font-medium">
+                      <span>Rs. {campaign.collectedAmount.toLocaleString()} raised</span>
+                      <span>Goal: Rs. {campaign.targetAmount.toLocaleString()}</span>
                     </div>
+                    <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${isCompleted ? "bg-emerald-400" : "bg-gold"
+                          }`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <p className={`text-xs ${isCompleted ? "text-emerald-400 font-semibold" : "text-white/40"}`}>
+                      {isCompleted ? `✓ 100% funded — Goal reached!` : `${percentage}% funded`}
+                    </p>
+                  </div>
+
+                  {/* Donate button — disabled when completed */}
+                  {isCompleted ? (
+                    <button
+                      disabled
+                      className="mt-auto w-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 font-bold rounded-xl py-3 text-sm flex items-center justify-center gap-2 cursor-not-allowed"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Goal Reached
+                    </button>
+                  ) : hasEnded ? (
+                    <button
+                      disabled
+                      className="mt-auto w-full bg-red-500/15 text-red-400 border border-red-500/25 font-bold rounded-xl py-3 text-sm flex items-center justify-center gap-2 cursor-not-allowed"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      Campaign Ended
+                    </button>
+                  ) : hasNotStarted ? (
+                    <button
+                      disabled
+                      className="mt-auto w-full bg-gray-500/15 text-gray-400 border border-gray-500/25 font-bold rounded-xl py-3 text-sm flex items-center justify-center gap-2 cursor-not-allowed"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      Not Started Yet
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setSelectedCampaign(campaign);
+                        setAmount("");
+                        setError("");
+                        setMessage("");
+                      }}
+                      className="mt-auto w-full bg-gold hover:bg-yellow-400 text-black font-bold rounded-xl py-3 text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <HeartHandshake className="w-4 h-4" />
+                      Donate Now
+                    </button>
                   )}
-                  <span className="text-xs uppercase tracking-widest text-gold font-bold">
-                    {campaign.campaignType}
-                  </span>
-                  <h3 className="text-xl font-bold mt-2 text-white">{campaign.name}</h3>
-                  <p className="text-white/60 mt-2 text-sm leading-relaxed">
-                    {campaign.description}
-                  </p>
-                </div>
-
-                {/* Progress */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs text-white/50 font-medium">
-                    <span>Rs. {campaign.collectedAmount.toLocaleString()} raised</span>
-                    <span>Goal: Rs. {campaign.targetAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        isCompleted ? "bg-emerald-400" : "bg-gold"
-                      }`}
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <p className={`text-xs ${isCompleted ? "text-emerald-400 font-semibold" : "text-white/40"}`}>
-                    {isCompleted ? `✓ 100% funded — Goal reached!` : `${percentage}% funded`}
-                  </p>
-                </div>
-
-                {/* Donate button — disabled when completed */}
-                {isCompleted ? (
-                  <button
-                    disabled
-                    className="mt-auto w-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 font-bold rounded-xl py-3 text-sm flex items-center justify-center gap-2 cursor-not-allowed"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Goal Reached
-                  </button>
-                ) : hasEnded ? (
-                  <button
-                    disabled
-                    className="mt-auto w-full bg-red-500/15 text-red-400 border border-red-500/25 font-bold rounded-xl py-3 text-sm flex items-center justify-center gap-2 cursor-not-allowed"
-                  >
-                    <AlertCircle className="w-4 h-4" />
-                    Campaign Ended
-                  </button>
-                ) : hasNotStarted ? (
-                  <button
-                    disabled
-                    className="mt-auto w-full bg-gray-500/15 text-gray-400 border border-gray-500/25 font-bold rounded-xl py-3 text-sm flex items-center justify-center gap-2 cursor-not-allowed"
-                  >
-                    <AlertCircle className="w-4 h-4" />
-                    Not Started Yet
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setSelectedCampaign(campaign);
-                      setAmount("");
-                      setError("");
-                      setMessage("");
-                    }}
-                    className="mt-auto w-full bg-gold hover:bg-yellow-400 text-black font-bold rounded-xl py-3 text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <HeartHandshake className="w-4 h-4" />
-                    Donate Now
-                  </button>
-                )}
                 </div>
               </div>
             );

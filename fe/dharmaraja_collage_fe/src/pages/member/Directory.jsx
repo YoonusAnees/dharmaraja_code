@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { useAuth } from "../../context/useAuth";
-import { Search, Mail, Phone, Award, Calendar, HeartHandshake, RefreshCw, Landmark } from "lucide-react";
+import { Search, Mail, Phone, Award, Calendar, HeartHandshake, RefreshCw, Landmark, UserCheck ,Home   } from "lucide-react";
 
 export default function Directory() {
   const { user } = useAuth();
@@ -24,10 +24,7 @@ export default function Directory() {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchMembers();
-    }, 0);
-    return () => clearTimeout(timer);
+    fetchMembers();
   }, []);
 
   // Filter members based on search term and exclude current user
@@ -44,6 +41,7 @@ export default function Directory() {
   });
 
   const getBadgeColors = (badgeName) => {
+
     if (!badgeName) return "text-white/40 bg-white/5 border-white/5";
     const name = badgeName.toLowerCase();
     if (name.includes("gold")) return "text-gold bg-gold/10 border-gold/20";
@@ -61,7 +59,7 @@ export default function Directory() {
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-wide">OBA Directory</h1>
             <p className="text-white/60 mt-1.5 text-xs sm:text-sm font-medium">Connect and see fellow Dharmaraja College Old Boys Association members.</p>
           </div>
-          <button 
+          <button
             onClick={fetchMembers}
             className="p-2.5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-white/60 hover:text-white"
             title="Refresh directory"
@@ -149,7 +147,20 @@ export default function Directory() {
                     )}
                   </div>
                 </div>
-
+                 {/* Job Title */}
+                  {member.jobTitle && (
+                    <div className="flex items-center gap-1.5 text-xs text-white/60">
+                      <UserCheck className="w-3.5 h-3.5 text-gold shrink-0" />
+                      <span>{member.jobTitle}</span>
+                    </div>
+                  )}
+                  {/* Address */}
+                  {member.address && (
+                    <div className="flex items-center gap-1.5 text-xs text-white/60">
+                      <Home className="w-3.5 h-3.5 text-gold shrink-0" />
+                      <span>{member.address}</span>
+                    </div>
+                  )}
                 {/* Contribution details */}
                 <div className="bg-slate-950/30 border border-white/5 rounded-2xl p-3.5 space-y-2.5 text-xs">
                   {/* Donations */}

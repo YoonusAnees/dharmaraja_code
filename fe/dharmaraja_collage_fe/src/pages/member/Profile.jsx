@@ -8,10 +8,13 @@ export default function Profile() {
   const [form, setForm] = useState({
     fullName: user?.fullName || "",
     contactNumber: user?.contactNumber || "",
+    email: user?.email || "",
     batchYear: user?.batchYear || "",
     branch: user?.branch || "",
     password: "",
     confirmPassword: "",
+    jobTitle: user?.jobTitle || "",
+    address: user?.address || "",
   });
 
   const [profilePictureFile, setProfilePictureFile] = useState(null);
@@ -75,7 +78,7 @@ export default function Profile() {
 
       {error && (
         <div className="bg-red-500/15 text-red-200 border border-red-500/20 p-4 rounded-2xl text-xs sm:text-sm">
-          ⚠️ {error}
+          {error}
         </div>
       )}
 
@@ -83,7 +86,7 @@ export default function Profile() {
       <div className="bg-white/5 border border-white/5 rounded-3xl p-5 sm:p-8 shadow-2xl relative">
         <form onSubmit={submitHandler} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            
+
             {/* Profile Picture */}
             <div className="sm:col-span-2 flex flex-col items-center sm:items-start gap-4">
               <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Profile Picture</label>
@@ -132,50 +135,78 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Email (Disabled, cannot be edited for integrity) */}
-            <div className="space-y-1.5 sm:col-span-2 opacity-50">
-              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Email Address (Non-editable)</label>
-              <input
-                type="email"
-                disabled
-                value={user?.email}
-                className="w-full bg-slate-950/20 border border-white/5 rounded-2xl px-4 py-3.5 text-white/60 text-sm cursor-not-allowed font-medium"
-              />
-            </div>
+           {/* Email */}
+<div className="space-y-1.5 sm:col-span-2">
+  <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">
+    Email Address
+  </label>
 
-            {/* Contact Number */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Contact Number</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
-                  <Phone className="w-4 h-4" />
-                </span>
-                <input
-                  type="tel"
-                  placeholder="Your contact number"
-                  value={form.contactNumber}
-                  onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
-                  className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
-                />
-              </div>
-            </div>
+  <div className="relative">
+    <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
+      <User className="w-4 h-4" />
+    </span>
 
-            {/* Batch Year */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Batch Year</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
-                  <Calendar className="w-4 h-4" />
-                </span>
-                <input
-                  type="text"
-                  placeholder="e.g. 2018"
-                  value={form.batchYear}
-                  onChange={(e) => setForm({ ...form, batchYear: e.target.value })}
-                  className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
-                />
-              </div>
-            </div>
+    <input
+      type="email"
+      placeholder="your@email.com"
+      value={form.email}
+      onChange={(e) =>
+        setForm({ ...form, email: e.target.value })
+      }
+      className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
+    />
+  </div>
+</div>
+
+{/* Job Title */}
+<div className="space-y-1.5">
+  <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">
+    Job Title
+  </label>
+
+  <div className="relative">
+    <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
+      <Landmark className="w-4 h-4" />
+    </span>
+
+    <input
+      type="text"
+      placeholder="e.g. Software Engineer"
+      value={form.jobTitle}
+      onChange={(e) =>
+        setForm({ ...form, jobTitle: e.target.value })
+      }
+      className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
+    />
+  </div>
+</div>
+
+{/* Address */}
+<div className="space-y-1.5">
+  <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">
+    Address
+  </label>
+
+  <div className="relative">
+    <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
+      <Landmark className="w-4 h-4" />
+    </span>
+
+    <input
+      type="text"
+      placeholder="e.g. Colombo"
+      value={form.address}
+      onChange={(e) =>
+        setForm({ ...form, address: e.target.value })
+      }
+      className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
+    />
+  </div>
+</div>
+
+
+
+
 
             {/* Branch */}
             <div className="space-y-1.5 sm:col-span-2">
@@ -193,6 +224,8 @@ export default function Profile() {
                 />
               </div>
             </div>
+
+
 
             {/* Password Section divider */}
             <div className="sm:col-span-2 border-t border-white/5 pt-4 mt-2">

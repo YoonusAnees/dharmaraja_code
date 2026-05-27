@@ -223,7 +223,7 @@ export const getMembersDirectory = async (req, res, next) => {
   try {
     // Fetch all approved member accounts, populating their badge and events
     const members = await User.find({ role: "member", status: "approved" })
-      .select("fullName email contactNumber batchYear branch badgeHistory events createdAt")
+      .select("fullName email contactNumber batchYear branch badgeHistory events jobTitle address createdAt")
       .populate("badgeHistory.badge")
       .populate("events")
       .sort("fullName");
@@ -243,6 +243,8 @@ export const getMembersDirectory = async (req, res, next) => {
           branch: member.branch,
           badgeHistory: member.badgeHistory,
           events: member.events,
+          jobTitle: member.jobTitle,
+          address: member.address,
           createdAt: member.createdAt,
           donations,
         };
@@ -260,7 +262,7 @@ export const getMembersDirectory = async (req, res, next) => {
 
 export const updateProfile = async (req, res, next) => {
   try {
-    const { fullName, contactNumber, batchYear, branch, password } = req.body;
+    const { fullName, contactNumber, batchYear, branch, password, jobTitle, address } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
@@ -271,6 +273,8 @@ export const updateProfile = async (req, res, next) => {
     if (contactNumber !== undefined) user.contactNumber = contactNumber;
     if (batchYear !== undefined) user.batchYear = batchYear;
     if (branch !== undefined) user.branch = branch;
+    if (jobTitle !== undefined) user.jobTitle = jobTitle;
+    if (address !== undefined) user.address = address;
 
     if (req.file) {
       user.profilePicture = req.file.path;
