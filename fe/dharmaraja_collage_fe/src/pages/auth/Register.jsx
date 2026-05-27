@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../../api/axios";
-import { User, Mail, Phone, Calendar, Lock, UserPlus, RefreshCw, IdCard } from "lucide-react";
+import { User, Mail, Phone, Calendar, Lock, RefreshCw, IdCard } from "lucide-react";
 import image from "/dc_logo.png";
 
 export default function Register() {

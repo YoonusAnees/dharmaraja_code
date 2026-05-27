@@ -20,7 +20,10 @@ export default function ManageCampaigns() {
   };
 
   useEffect(() => {
-    loadCampaigns();
+    const timer = setTimeout(() => {
+      loadCampaigns();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const submitHandler = async (e) => {

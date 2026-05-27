@@ -55,7 +55,9 @@ export default function Events() {
       let stored = null;
       try {
         stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
-      } catch (_) {}
+      } catch {
+        void 0;
+      }
 
       if (paymentStatus === "success" && (orderId || stored?.orderId)) {
         try {

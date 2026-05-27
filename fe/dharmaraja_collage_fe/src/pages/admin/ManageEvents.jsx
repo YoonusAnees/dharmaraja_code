@@ -19,7 +19,10 @@ export default function ManageEvents() {
   };
 
   useEffect(() => {
-    loadEvents();
+    const timer = setTimeout(() => {
+      loadEvents();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const submitHandler = async (e) => {

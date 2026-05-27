@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { useAuth } from "../../context/useAuth";
-import { Search, Mail, Phone, Award, Calendar, HeartHandshake, RefreshCw, Landmark, UserCheck } from "lucide-react";
+import { Search, Mail, Phone, Award, Calendar, HeartHandshake, RefreshCw, Landmark } from "lucide-react";
 
 export default function Directory() {
   const { user } = useAuth();
@@ -24,7 +24,10 @@ export default function Directory() {
   };
 
   useEffect(() => {
-    fetchMembers();
+    const timer = setTimeout(() => {
+      fetchMembers();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Filter members based on search term and exclude current user

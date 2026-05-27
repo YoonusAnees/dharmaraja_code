@@ -589,3 +589,46 @@ export const markPaymentCancelled = async (req, res, next) => {
     next(error);
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET ALL PENDING PAYMENTS (Admin Only)
+// ─────────────────────────────────────────────────────────────────────────────
+export const getPendingPayments = async (req, res, next) => {
+  try {
+    const payments = await Payment.find({ status: "pending" })
+      .populate("user", "fullName email contactNumber")
+      .populate("item")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, payments });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE PENDING PAYMENT
+// ─────────────────────────────────────────────────────────────────────────────
+export const deletePendingPayment = async (req, res, next) => {
+  try {
+    const payment = await Payment.findById(req.params.id);
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    if (payment.status !== "pending") {
+      return res.status(400).json({ message: "Only pending payments can be deleted" });
+    }
+
+    if (req.user.role !== "admin" && payment.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You are not authorized to delete this payment" });
+    }
+
+    await Payment.findByIdAndDelete(req.params.id);
+
+    res.json({ success: true, message: "Pending payment deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+

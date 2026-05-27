@@ -21,10 +21,6 @@ export default function ManageReports() {
     receipt: null,
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -42,6 +38,13 @@ export default function ManageReports() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const uploadExpense = async (e) => {
     e.preventDefault();

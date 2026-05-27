@@ -94,25 +94,31 @@ export const useNotifications = () => {
 
   // Initial load
   useEffect(() => {
-    fetchNotifications();
-    fetchUnread();
+    const timer = setTimeout(() => {
+      fetchNotifications();
+      fetchUnread();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Live socket update
   useEffect(() => {
     if (liveNotification) {
-      setUnreadCount((prev) => prev + 1);
-      setNotifications((prev) => [
-        {
-          _id: `live-${Date.now()}`,
-          title: liveNotification.title,
-          message: liveNotification.message,
-          type: liveNotification.type,
-          createdAt: new Date(),
-          readBy: [],
-        },
-        ...prev,
-      ]);
+      const timer = setTimeout(() => {
+        setUnreadCount((prev) => prev + 1);
+        setNotifications((prev) => [
+          {
+            _id: `live-${Date.now()}`,
+            title: liveNotification.title,
+            message: liveNotification.message,
+            type: liveNotification.type,
+            createdAt: new Date(),
+            readBy: [],
+          },
+          ...prev,
+        ]);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [liveNotification]);
 

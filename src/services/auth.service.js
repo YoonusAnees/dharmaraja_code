@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import Payment from "../models/model.payment.js";
 import User from "../models/model.user.js";
 import { approvalEmail, sendBrevoEmail } from "./email.service.js";
 
@@ -36,8 +37,12 @@ export const approveUser = async (userId) => {
   }
 
   user.status = "approved";
+  // Ensure registration fee is marked as paid when approving the member
+  user.registrationFeePaid = true;
+  // Update any pending registration payment records to paid
+  await Payment.updateMany({ user: user._id, type: 'registration', status: 'pending' }, { status: 'paid' });
+  // Persist changes to the user before sending notification
   await user.save();
-
   try {
     await sendBrevoEmail({
       to: user.email,

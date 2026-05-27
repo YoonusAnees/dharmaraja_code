@@ -16,6 +16,8 @@ import {
 export default function AdminDashboard() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pendingPayments, setPendingPayments] = useState([]);
+  const [loadingPayments, setLoadingPayments] = useState(false);
 
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -28,6 +30,7 @@ export default function AdminDashboard() {
     paid: null,
     delete: null,
     edit: null,
+    deletePayment: null,
   });
 
   const setLoadingAction = (type, id) => {
@@ -66,8 +69,34 @@ export default function AdminDashboard() {
     }
   };
 
+  // =========================
+  // FETCH PENDING PAYMENTS
+  // =========================
+  const fetchPendingPayments = async () => {
+    try {
+      setLoadingPayments(true);
+      setError("");
+
+      const res = await api.get("/payments/pending");
+
+      setPendingPayments(res.data.payments || []);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to load pending payments"
+      );
+    } finally {
+      setLoadingPayments(false);
+    }
+  };
+
   useEffect(() => {
-    fetchMembers();
+    const timer = setTimeout(() => {
+      fetchMembers();
+      fetchPendingPayments();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // =========================
@@ -165,6 +194,43 @@ export default function AdminDashboard() {
       );
     } finally {
       clearLoadingAction("delete");
+    }
+  };
+
+  // =========================
+  // DELETE PENDING PAYMENT
+  // =========================
+  const handleDeletePayment = async (paymentId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this pending payment from the database?"
+    );
+
+    if (!confirmDelete) return;
+
+    setLoadingAction("deletePayment", paymentId);
+
+    setSuccessMsg("");
+    setError("");
+
+    try {
+      await api.delete(`/payments/${paymentId}`);
+
+      setSuccessMsg("Pending payment deleted successfully!");
+
+      fetchPendingPayments();
+      fetchMembers();
+
+      setTimeout(() => {
+        setSuccessMsg("");
+      }, 5000);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to delete payment"
+      );
+    } finally {
+      clearLoadingAction("deletePayment");
     }
   };
 
@@ -272,11 +338,14 @@ export default function AdminDashboard() {
         </div>
 
         <button
-          onClick={fetchMembers}
+          onClick={() => {
+            fetchMembers();
+            fetchPendingPayments();
+          }}
           className="flex items-center gap-2 bg-emerald-950 border border-white/10 hover:bg-emerald-900 rounded-xl px-4 py-2 text-sm font-bold text-white transition-colors"
         >
           <RefreshCw
-            className={`w-4 h-4 ${loading ? "animate-spin" : ""
+            className={`w-4 h-4 ${loading || loadingPayments ? "animate-spin" : ""
               }`}
           />
 
@@ -490,6 +559,118 @@ export default function AdminDashboard() {
                         >
                           {loadingState.delete ===
                             member._id ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      
+
+      {/* PENDING PAYMENTS SECTION */}
+      <div className="bg-white/5 border border-white/5 rounded-3xl p-6">
+        <h2 className="text-xl font-black text-white mb-6">
+          Manage Pending Payments
+        </h2>
+
+        {loadingPayments ? (
+          <div className="py-20 text-center text-white/50">
+            <RefreshCw className="w-10 h-10 animate-spin mx-auto mb-3 text-gold" />
+            Loading pending payments...
+          </div>
+        ) : pendingPayments.length === 0 ? (
+          <div className="py-12 text-center text-white/40 border border-dashed border-white/10 rounded-2xl text-sm bg-white/5">
+            No pending payments found.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-white/10 text-white/40 text-xs uppercase">
+                  <th className="py-4 px-4">User</th>
+                  <th className="py-4 px-4">Type</th>
+                  <th className="py-4 px-4">Item Details</th>
+                  <th className="py-4 px-4">Amount</th>
+                  <th className="py-4 px-4">Date</th>
+                  <th className="py-4 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingPayments.map((payment) => (
+                  <tr
+                    key={payment._id}
+                    className="border-b border-white/5 hover:bg-white/5"
+                  >
+                    {/* USER */}
+                    <td className="py-4 px-4">
+                      <div className="font-bold text-white">
+                        {payment.user?.fullName || "Unknown"}
+                      </div>
+                      <div className="text-xs text-white/40">
+                        {payment.user?.email || "N/A"}
+                      </div>
+                    </td>
+
+                    {/* TYPE */}
+                    <td className="py-4 px-4">
+                      <span className="capitalize text-white text-sm">
+                        {payment.type}
+                      </span>
+                    </td>
+
+                    {/* ITEM DETAILS */}
+                    <td className="py-4 px-4">
+                      <div className="text-white text-sm">
+                        {payment.type === "donation" && payment.item?.name
+                          ? `Campaign: ${payment.item.name}`
+                          : payment.type === "event" && payment.item?.title
+                          ? `Event: ${payment.item.title}`
+                          : payment.type === "badge" && payment.item?.name
+                          ? `Badge: ${payment.item.name}`
+                          : payment.type === "registration"
+                          ? "Membership Registration Fee"
+                          : "N/A"}
+                      </div>
+                    </td>
+
+                    {/* AMOUNT */}
+                    <td className="py-4 px-4">
+                      <div className="font-semibold text-white">
+                        LKR {payment.amount.toLocaleString()}
+                      </div>
+                    </td>
+
+                    {/* DATE */}
+                    <td className="py-4 px-4 text-white/60 text-sm">
+                      {payment.createdAt
+                        ? new Date(payment.createdAt).toLocaleDateString("en-US", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "N/A"}
+                    </td>
+
+                    {/* ACTIONS */}
+                    <td className="py-4 px-4">
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => handleDeletePayment(payment._id)}
+                          disabled={
+                            loadingState.deletePayment === payment._id
+                          }
+                          className="p-2 bg-red-500 hover:bg-red-400 disabled:opacity-50 rounded-xl text-black"
+                          title="Delete Pending Payment"
+                        >
+                          {loadingState.deletePayment === payment._id ? (
                             <RefreshCw className="w-4 h-4 animate-spin" />
                           ) : (
                             <Trash2 className="w-4 h-4" />

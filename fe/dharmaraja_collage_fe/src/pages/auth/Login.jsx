@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
-import { Mail, Lock, LogIn, RefreshCw } from "lucide-react";
+import { Mail, Lock, RefreshCw } from "lucide-react";
 import image from "/dc_logo.png";
 
 
