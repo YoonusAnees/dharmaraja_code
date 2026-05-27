@@ -11,6 +11,7 @@ import {
   LogOut,
   BellRing
 } from "lucide-react";
+import image from "/dc_logo.png";
 
 export default function AdminLayout() {
   const { logout, user } = useAuth();
@@ -32,8 +33,8 @@ export default function AdminLayout() {
       {/* ================= DESKTOP SIDEBAR ================= */}
       <aside className="hidden md:flex flex-col w-72 bg-emerald-950 border-r border-white/5 h-screen sticky top-0 p-6 justify-between shrink-0">
         <div className="space-y-8">
-          <Link to="/admin" className="flex items-center gap-2">
-            <span className="text-2xl font-black text-gold tracking-wider">OBAMS ADMIN</span>
+          <Link to="/admin" className="flex items-center justify-center gap-2">
+            <img src={image} alt="OBAMS OBA" className="w-30 h-30" />
           </Link>
 
           <nav className="space-y-1.5">
@@ -94,7 +95,7 @@ export default function AdminLayout() {
         {/* MOBILE STICKY TOP HEADER */}
         <header className="sticky top-0 z-40 bg-emerald-950/95 backdrop-blur border-b border-white/10 px-6 py-4 flex items-center justify-between shadow-md md:hidden">
           <Link to="/admin" className="flex items-center gap-2">
-            <span className="text-xl font-black text-gold tracking-wider">OBAMS ADMIN</span>
+            <img src={image} alt="OBAMS OBA" className="w-12 h-12" />
           </Link>
 
           <div className="flex items-center gap-3">
