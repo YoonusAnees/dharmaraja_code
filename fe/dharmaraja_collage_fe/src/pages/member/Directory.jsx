@@ -179,7 +179,7 @@ export default function Directory() {
                       <Calendar className="w-3.5 h-3.5 text-purple-400" /> Events:
                     </span>
                     <span className="font-semibold text-white/80">
-                      {member.events?.length || 0} registered
+                      {member.events?.length || 0} registered  
                     </span>
                   </div>
                 </div>

@@ -21,6 +21,8 @@ export default function ManageEvents() {
     budget: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const loadEvents = async () => {
     const res = await api.get("/events");
     setEvents(res.data.events || []);
@@ -35,22 +37,39 @@ export default function ManageEvents() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    const formData = new FormData();
-    Object.keys(form).forEach((key) => formData.append(key, form[key]));
-    if (imageFile) {
-      formData.append("image", imageFile);
-    }
+    try {
+      const formData = new FormData();
+      Object.keys(form).forEach((key) => formData.append(key, form[key]));
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
 
-    await api.post("/events", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    setForm({ title: "", description: "", eventDate: "", location: "", fee: "", budget: "" });
-    setImageFile(null);
-    if (document.getElementById("eventImageInput")) {
-      document.getElementById("eventImageInput").value = "";
+      await api.post("/events", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setForm({
+        title: "",
+        description: "",
+        eventDate: "",
+        location: "",
+        fee: "",
+        budget: "",
+      });
+
+      setImageFile(null);
+
+      const input = document.getElementById("eventImageInput");
+      if (input) input.value = "";
+
+      loadEvents();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    loadEvents();
   };
 
   return (
@@ -185,9 +204,21 @@ export default function ManageEvents() {
         {/* Submit Button */}
         <button
           type="submit"
-          className="md:col-span-2 bg-gold hover:bg-yellow-400 text-black font-bold rounded-2xl py-4 text-lg transition-all duration-300 shadow-lg hover:scale-[1.01]"
+          disabled={loading}
+          className={`md:col-span-2 flex items-center justify-center gap-3 font-bold rounded-2xl py-4 text-lg transition-all duration-300 shadow-lg
+    ${loading
+              ? "bg-yellow-300 cursor-not-allowed"
+              : "bg-gold hover:bg-yellow-400 hover:scale-[1.01]"
+            } text-black`}
         >
-          Create Event
+          {loading ? (
+            <>
+              <RefreshCw className="w-5 h-5 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            "Create Event"
+          )}
         </button>
       </form>
 
