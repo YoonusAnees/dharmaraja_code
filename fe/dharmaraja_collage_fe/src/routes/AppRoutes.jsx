@@ -22,6 +22,7 @@ import Reports from "../pages/member/Reports";
 import MemberNotifications from "../pages/member/MemberNotifications";
 import Directory from "../pages/member/Directory";
 import Profile from "../pages/member/Profile";
+import RegisterAdmin from "../pages/auth/AdminRegister";
 
 export default function AppRoutes() {
   return (
@@ -30,6 +31,7 @@ export default function AppRoutes() {
 
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/register-admin" element={<RegisterAdmin />} />
 
       <Route
         path="/admin"

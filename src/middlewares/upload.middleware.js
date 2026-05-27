@@ -15,11 +15,9 @@ if (!fs.existsSync(uploadsDir)) {
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) {
-    cb(null, true);
-  } else {
-    cb(new Error("Not an image! Please upload an image file."), false);
-  }
+  // Accept any file type (e.g., receipts can be PDF, PNG, etc.)
+  // Previously we enforced image only which caused uploads of PDFs to fail.
+  cb(null, true);
 };
 
 export const upload = multer({

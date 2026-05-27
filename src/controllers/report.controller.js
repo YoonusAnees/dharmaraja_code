@@ -6,23 +6,29 @@ import Event from "../models/model.event.js";
 import cloudinary from "../config/cloudinary.js";
 
 export const uploadExpense = async (req, res, next) => {
+  console.log('uploadExpense called');
+  console.log('req.file:', req.file ? { originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size } : 'none');
   try {
     let receiptUrl = "";
 
-    if (req.file) {
-      const uploadResult = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: "obams/receipts" },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
+    try {
+      if (req.file) {
+        const uploadResult = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "obams/receipts", resource_type: "auto" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
 
-        stream.end(req.file.buffer);
-      });
+          stream.end(req.file.buffer);
+        });
 
-      receiptUrl = uploadResult.secure_url;
+        receiptUrl = uploadResult.secure_url;
+      }
+    } catch (uploadErr) {
+      console.warn("Receipt upload failed, proceeding without receipt:", uploadErr);
     }
 
     const expenseData = {

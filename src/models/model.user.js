@@ -65,7 +65,9 @@ const userSchema = new mongoose.Schema(
 
     nic: {
       type: String,
-      required: true,
+      // NIC is optional; required for members only
+      // unique constraint remains to prevent duplicates when provided
+      // required: true, // removed to allow admin creation without NIC
       unique: true,
     },
 
