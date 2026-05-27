@@ -84,13 +84,13 @@ export default function ManageReports() {
     });
     autoTable(doc, {
       startY: y + 4,
-      head: [["Event", "Budget", "Income", "Expense", "Profit"]],
+      head: [["Event", "Budget", "Income", "Expense", "Net Balance"]],
       body: analytics.eventData.map(ev => [ev.name, ev.budget.toLocaleString(), ev.income.toLocaleString(), ev.expense.toLocaleString(), ev.profit.toLocaleString()]),
       theme: "grid", headStyles: { fillColor: [41, 128, 185] },
     });
     autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 10,
-      head: [["Campaign", "Target", "Collected", "Expense", "Profit"]],
+      head: [["Campaign", "Target", "Collected", "Expense", "Net Balance"]],
       body: analytics.campaignData.map(c => [c.name, c.target.toLocaleString(), c.income.toLocaleString(), c.expense.toLocaleString(), c.profit.toLocaleString()]),
       theme: "grid", headStyles: { fillColor: [41, 128, 185] },
     });
@@ -251,7 +251,7 @@ export default function ManageReports() {
                 <th className="pb-2 font-semibold text-white/60">Budget</th>
                 <th className="pb-2 font-semibold text-emerald-400">Income</th>
                 <th className="pb-2 font-semibold text-red-400">Expense</th>
-                <th className="pb-2 font-semibold text-blue-400">Profit</th>
+                <th className="pb-2 font-semibold text-blue-400">Net Balance</th>
               </tr>
             </thead>
             <tbody className="text-xs text-white print-text-black">
@@ -282,7 +282,7 @@ export default function ManageReports() {
                 <th className="pb-2 font-semibold">Target</th>
                 <th className="pb-2 font-semibold text-emerald-400">Collected</th>
                 <th className="pb-2 font-semibold text-red-400">Expense</th>
-                <th className="pb-2 font-semibold text-blue-400">Profit</th>
+                <th className="pb-2 font-semibold text-blue-400">Net Balance</th>
               </tr>
             </thead>
             <tbody className="text-xs text-white print-text-black">
