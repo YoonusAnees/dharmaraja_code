@@ -3,22 +3,26 @@ import Notification from "../models/model.notification.js";
 export const getNotifications = async (req, res) => {
   try {
     const userId = req.user._id;
-
-    const notifications = await Notification.find({
-      $or: [
-        { isBroadcast: true },
-        { recipient: userId },
-      ],
-    }).sort("-createdAt");
-
+    // Base filter: broadcast OR specific to this user
+    const baseFilter = {
+      $or: [{ isBroadcast: true }, { recipient: userId }],
+    };
+    // New (pending) members should only see system notifications
+    if (req.user.role === "member" && req.user.status !== "approved") {
+      baseFilter.type = { $nin: ["campaign", "event"] };
+    }
+    const notifications = await Notification.find(baseFilter).sort("-createdAt");
     res.json({
       success: true,
       notifications,
     });
   } catch (error) {
-    console.error("getNotifications error:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch notifications" });
-  }
+
+    res.json({
+      success: true,
+      notifications,
+    });
+  } 
 };
 
 

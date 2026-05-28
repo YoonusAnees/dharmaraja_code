@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import Payment from "../models/model.payment.js";
 import User from "../models/model.user.js";
-import { approvalEmail, sendBrevoEmail } from "./email.service.js";
+import { approvalEmail, sendBrevoEmail, pendingApprovalEmail } from "./email.service.js";
 
 export const registerUser = async (data) => {
   const exists = await User.findOne({ email: data.email });
@@ -28,6 +28,16 @@ export const registerUser = async (data) => {
     nic: data.nic,
     jobTitle: data.jobTitle,
   });
+
+  try {
+    await sendBrevoEmail({
+      to: user.email,
+      subject: "Registration Pending Approval",
+      html: pendingApprovalEmail(user.fullName),
+    });
+  } catch (emailError) {
+    console.error("Failed to send registration pending email via Brevo:", emailError.message);
+  }
 
   return user;
 };

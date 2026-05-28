@@ -7,6 +7,7 @@ import {
   logout,
   me,
   approveMember,
+  rejectMember,
   getMembers,
   markMemberAsPaid,
   updateMember,
@@ -31,6 +32,7 @@ router.put("/me", protect, upload.single("profilePicture"), processImage, update
 router.get("/members/directory", protect, getMembersDirectory);
 router.get("/members", protect, adminOnly, getMembers);
 router.patch("/approve/:id", protect, adminOnly, approveMember);
+router.patch("/reject/:id", protect, adminOnly, rejectMember);
 router.patch("/mark-paid/:id", protect, adminOnly, markMemberAsPaid);
 router.put("/members/:id", protect, adminOnly, updateMember);
 router.delete("/members/:id", protect, adminOnly, deleteMember);

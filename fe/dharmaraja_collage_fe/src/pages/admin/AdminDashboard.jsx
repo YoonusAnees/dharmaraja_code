@@ -31,6 +31,7 @@ export default function AdminDashboard() {
     delete: null,
     edit: null,
     deletePayment: null,
+    reject: null,
   });
 
   const setLoadingAction = (type, id) => {
@@ -158,6 +159,32 @@ export default function AdminDashboard() {
       );
     } finally {
       clearLoadingAction("paid");
+    }
+  };
+
+  // =========================
+  // REJECT MEMBER
+  // =========================
+  const handleReject = async (memberId) => {
+    const reason = window.prompt("Enter rejection reason (optional):");
+    setLoadingAction("reject", memberId);
+    setSuccessMsg("");
+    setError("");
+    try {
+      await api.patch(`/auth/reject/${memberId}`, { reason });
+      setSuccessMsg("Member rejected and removed successfully!");
+      fetchMembers();
+      setTimeout(() => {
+        setSuccessMsg("");
+      }, 5000);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Rejection failed"
+      );
+    } finally {
+      clearLoadingAction("reject");
     }
   };
 
@@ -464,8 +491,8 @@ export default function AdminDashboard() {
                     <td className="py-5 px-4">
                       <span
                         className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${member.registrationFeePaid
-                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                            : "bg-red-500/20 text-red-300 border border-red-500/30"
+                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                          : "bg-red-500/20 text-red-300 border border-red-500/30"
                           }`}
                       >
                         {member.registrationFeePaid
@@ -478,10 +505,10 @@ export default function AdminDashboard() {
                     <td className="py-5 px-4">
                       <span
                         className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${member.status === "approved"
-                            ? "bg-emerald-500 text-black"
-                            : member.status === "pending"
-                              ? "bg-yellow-400 text-black"
-                              : "bg-red-500 text-black"
+                          ? "bg-emerald-500 text-black"
+                          : member.status === "pending"
+                            ? "bg-yellow-400 text-black"
+                            : "bg-red-500 text-black"
                           }`}
                       >
                         {member.status}
@@ -491,27 +518,7 @@ export default function AdminDashboard() {
                     {/* ACTIONS */}
                     <td className="py-5 px-4">
                       <div className="flex justify-end gap-2">
-                        {/* PAID */}
-                        {!member.registrationFeePaid && (
-                          <button
-                            onClick={() =>
-                              handleMarkPaid(member._id)
-                            }
-                            disabled={
-                              loadingState.paid === member._id
-                            }
-                            className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black text-xs font-bold rounded-xl px-3 py-2"
-                          >
-                            {loadingState.paid ===
-                              member._id ? (
-                              <RefreshCw className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <DollarSign className="w-4 h-4" />
-                            )}
 
-                            Paid
-                          </button>
-                        )}
 
                         {/* APPROVE */}
                         {member.status === "pending" && (
@@ -533,6 +540,22 @@ export default function AdminDashboard() {
                             )}
 
                             Approve
+                          </button>
+                        )}
+
+                        {/* REJECT */}
+                        {member.status === "pending" && (
+                          <button
+                            onClick={() => handleReject(member._id)}
+                            disabled={loadingState.reject === member._id}
+                            className="inline-flex items-center gap-1 bg-gray-500 hover:bg-gray-400 disabled:opacity-50 text-black text-xs font-bold rounded-xl px-3 py-2"
+                          >
+                            {loadingState.reject === member._id ? (
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <X className="w-4 h-4" />
+                            )}
+                            Reject
                           </button>
                         )}
 
@@ -573,7 +596,7 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
-      
+
 
       {/* PENDING PAYMENTS SECTION */}
       <div className="bg-white/5 border border-white/5 rounded-3xl p-6">
@@ -632,12 +655,12 @@ export default function AdminDashboard() {
                         {payment.type === "donation" && payment.item?.name
                           ? `Campaign: ${payment.item.name}`
                           : payment.type === "event" && payment.item?.title
-                          ? `Event: ${payment.item.title}`
-                          : payment.type === "badge" && payment.item?.name
-                          ? `Badge: ${payment.item.name}`
-                          : payment.type === "registration"
-                          ? "Membership Registration Fee"
-                          : "N/A"}
+                            ? `Event: ${payment.item.title}`
+                            : payment.type === "badge" && payment.item?.name
+                              ? `Badge: ${payment.item.name}`
+                              : payment.type === "registration"
+                                ? "Membership Registration Fee"
+                                : "N/A"}
                       </div>
                     </td>
 
@@ -652,10 +675,10 @@ export default function AdminDashboard() {
                     <td className="py-4 px-4 text-white/60 text-sm">
                       {payment.createdAt
                         ? new Date(payment.createdAt).toLocaleDateString("en-US", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
                         : "N/A"}
                     </td>
 

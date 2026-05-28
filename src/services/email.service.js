@@ -67,6 +67,17 @@ export const emailTemplate = ({ title, body, buttonText, buttonUrl }) => {
   `;
 };
 
+export const pendingApprovalEmail = (name) =>
+  emailTemplate({
+    title: "Registration Pending Approval",
+    body: `
+      <p>Dear ${name},</p>
+      <p>Thank you for registering with the Dharmaraja College Old Boys Association.</p>
+      <p>Your registration is currently pending admin approval. Once approved, you will receive an email with your login credentials.</p>
+      <p>Please allow some time for the approval process.</p>
+    `,
+  });
+
 export const registrationPaymentEmail = (name) =>
   emailTemplate({
     title: "Registration Payment Received",
@@ -77,6 +88,7 @@ export const registrationPaymentEmail = (name) =>
       <p>Your account is now pending admin approval. Login credentials will be sent after verification.</p>
     `,
   });
+
 
 export const approvalEmail = ({ name, email, password }) =>
   emailTemplate({
@@ -89,6 +101,16 @@ export const approvalEmail = ({ name, email, password }) =>
       <p>Please change your password after first login.</p>
     `,
   });
+
+export const rejectedEmail = ({ name, reason }) =>
+  emailTemplate({
+    title: "Registration Rejected",
+    body: `
+      <p>Dear ${name},</p>
+      <p>Your registration has been rejected.</p>
+      <p><b>Reason:</b> ${reason}</p>
+    `,
+    });
 
 export const campaignBroadcastEmail = ({ name, campaign }) =>
   emailTemplate({
@@ -103,3 +125,4 @@ export const campaignBroadcastEmail = ({ name, campaign }) =>
     buttonText: "View Campaign",
     buttonUrl: process.env.FRONTEND_URL,
   });
+

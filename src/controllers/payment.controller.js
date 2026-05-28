@@ -7,7 +7,7 @@ import Badge from "../models/model.badge.js";
 import Event from "../models/model.event.js";
 import Donation from "../models/model.donation.js";
 import Payment from "../models/model.payment.js";
-import { sendBrevoEmail, registrationPaymentEmail } from "../services/email.service.js";
+import { sendBrevoEmail, approvalEmail, pendingApprovalEmail, registrationPaymentEmail } from "../services/email.service.js";
 
 const PAYHERE_URL = process.env.PAYHERE_MODE === "production"
   ? "https://www.payhere.lk/pay/checkout"
@@ -179,7 +179,7 @@ const createOrderId = () => new mongoose.Types.ObjectId().toString();
 // ─────────────────────────────────────────────────────────────────────────────
 export const initiateRegistrationPayment = async (req, res, next) => {
   try {
-    const { fullName, email, contactNumber, batchYear,address,nic,jobTitle } = req.body;
+    const { fullName, email, contactNumber, batchYear, address, nic, jobTitle } = req.body;
 
     if (!fullName || !email) {
       return res.status(400).json({ message: "Full name and email are required" });
@@ -207,8 +207,16 @@ export const initiateRegistrationPayment = async (req, res, next) => {
       registrationFeePaid: false,
     });
 
-    const [firstName, ...rest] = fullName.trim().split(" ");
-    const lastName = rest.join(" ") || "Member";
+    // Send acknowledgment email to the new member
+    try {
+      await sendBrevoEmail({
+        to: user.email,
+        subject: "Registration Received – Pending Approval",
+        html: pendingApprovalEmail(user.fullName),
+      });
+    } catch (emailErr) {
+      console.error("Failed to send pending approval email:", emailErr.message);
+    }
     const orderId = createOrderId();
 
     // For registration we DO create the payment record upfront (user must exist)
@@ -222,6 +230,10 @@ export const initiateRegistrationPayment = async (req, res, next) => {
       currency: "LKR",
       status: "pending",
     });
+
+    // Split full name into first and last for PayHere payload
+    const [firstName, ...rest] = fullName.trim().split(" ");
+    const lastName = rest.join(" ") || "Member";
 
     const payherePayload = getPayHerePayload({
       orderId,
@@ -318,13 +330,13 @@ export const createCheckoutPayment = async (req, res, next) => {
 
     const returnPath =
       type === "donation" ? "/member/campaigns?payment=success"
-      : type === "badge"  ? "/member/badges?payment=success"
-      :                     "/member/events?payment=success";
+        : type === "badge" ? "/member/badges?payment=success"
+          : "/member/events?payment=success";
 
     const cancelPath =
       type === "donation" ? "/member/campaigns?payment=cancel"
-      : type === "badge"  ? "/member/badges?payment=cancel"
-      :                     "/member/events?payment=cancel";
+        : type === "badge" ? "/member/badges?payment=cancel"
+          : "/member/events?payment=cancel";
 
     // paymentMeta is embedded in custom_1 so the PayHere webhook can reconstruct the payment
     const paymentMeta = {
@@ -534,22 +546,22 @@ export const completePaymentSuccessReturn = async (req, res, next) => {
     // Mark paid and fulfill immediately since we are returning from PayHere success URL
     payment.status = "paid";
     await payment.save();
-    
+
     await fulfillPayment(payment);
-    
+
     res.json({ success: true, message: "Payment completed successfully!" });
   } catch (error) {
     if (error.code === 11000) {
       // Duplicate key error due to concurrent requests (e.g., React StrictMode double rendering)
       // The other concurrent request successfully processed it.
-      return res.json({ 
-        success: true, 
-        message: "Payment completed successfully! (concurrent request handled)" 
+      return res.json({
+        success: true,
+        message: "Payment completed successfully! (concurrent request handled)"
       });
     }
     console.error("completePaymentSuccessReturn ERROR:", error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: error.message || "Unknown error",
       stack: error.stack
     });
