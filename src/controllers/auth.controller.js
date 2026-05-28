@@ -3,6 +3,7 @@ import User from "../models/model.user.js";
 import RefreshToken from "../models/model.refreshToken.js";
 import Badge from "../models/model.badge.js";
 import Event from "../models/model.event.js";
+import Payment from "../models/model.payment.js";
 import Donation from "../models/model.donation.js";
 import { registerUser, approveUser, registerAdminService } from "../services/auth.service.js";
 import {
@@ -257,8 +258,10 @@ export const deleteMember = async (req, res, next) => {
     const fullName = user.fullName;
 
     await User.findByIdAndDelete(req.params.id);
+// Remove registration payment record(s) associated with this user
+await Payment.deleteMany({ user: user._id, type: "registration" });
 
-    try {
+try {
       await sendBrevoEmail({
         to: email,
         subject: "Account Removed",
