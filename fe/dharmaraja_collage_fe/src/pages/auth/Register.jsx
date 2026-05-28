@@ -58,7 +58,8 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await api.post("/payments/registration", form);
+      const { password, ...payload } = form;
+      const res = await api.post("/payments/registration", payload);
       setMessage(res.data.message || "Redirecting to payment gateway...");
       setPayhereData({ ...res.data.payhere, checkoutUrl: res.data.checkoutUrl });
     } catch (err) {
@@ -296,49 +297,27 @@ export default function Register() {
             </div>
 
 
-
-
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gold hover:bg-gold-hover text-black font-extrabold rounded-2xl py-4 transition-all duration-300 shadow-lg shadow-gold/10 hover:shadow-gold/20 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-xs tracking-widest uppercase mt-6"
+            >
+              {loading ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                "Register & Pay LKR 1,000"
+              )}
+            </button>
           </div>
 
-          {/* Password */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Password</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
-                <Lock className="w-4 h-4" />
-              </span>
-              <input
-                type="password"
-                required
-                placeholder="••••••••"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
-              />
-            </div>
+          <div className="text-center pt-2 border-t border-white/5">
+            <p className="text-white/40 text-xs font-semibold">
+              Already registered?{" "}
+              <Link to="/login" className="text-gold hover:underline transition-all font-bold">
+                Sign In here
+              </Link>
+            </p>
           </div>
-
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gold hover:bg-gold-hover text-black font-extrabold rounded-2xl py-4 transition-all duration-300 shadow-lg shadow-gold/10 hover:shadow-gold/20 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-xs tracking-widest uppercase mt-6"
-          >
-            {loading ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              "Register & Pay LKR 1,000"
-            )}
-          </button>
-        </div>
-
-        <div className="text-center pt-2 border-t border-white/5">
-          <p className="text-white/40 text-xs font-semibold">
-            Already registered?{" "}
-            <Link to="/login" className="text-gold hover:underline transition-all font-bold">
-              Sign In here
-            </Link>
-          </p>
         </div>
       </form>
 

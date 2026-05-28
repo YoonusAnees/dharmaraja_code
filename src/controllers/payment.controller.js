@@ -179,10 +179,10 @@ const createOrderId = () => new mongoose.Types.ObjectId().toString();
 // ─────────────────────────────────────────────────────────────────────────────
 export const initiateRegistrationPayment = async (req, res, next) => {
   try {
-    const { fullName, email, contactNumber, batchYear, password,address,nic,jobTitle } = req.body;
+    const { fullName, email, contactNumber, batchYear,address,nic,jobTitle } = req.body;
 
-    if (!fullName || !email || !password) {
-      return res.status(400).json({ message: "Full name, email and password are required" });
+    if (!fullName || !email) {
+      return res.status(400).json({ message: "Full name and email are required" });
     }
 
     const existingUser = await User.findOne({ email });
@@ -190,7 +190,9 @@ export const initiateRegistrationPayment = async (req, res, next) => {
       return res.status(400).json({ message: "Email already exists. Please use another email or contact admin." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // Generate a temporary password for the new member (required by the schema)
+    const tempPassword = crypto.randomBytes(8).toString("hex");
+    const hashedPassword = await bcrypt.hash(tempPassword, 12);
     const user = await User.create({
       fullName,
       email,
