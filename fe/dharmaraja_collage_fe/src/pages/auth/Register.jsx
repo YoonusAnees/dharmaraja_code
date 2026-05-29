@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../../api/axios";
-import { User, Mail, Phone, Calendar, Lock, RefreshCw, IdCard } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  Lock,
+  RefreshCw,
+  IdCard,
+} from "lucide-react";
 import image from "/dc_logo.png";
 
 export default function Register() {
@@ -23,13 +31,15 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const payhereFormRef = useRef(null);
 
-  const paymentSuccessMessage = paymentStatus === "success"
-    ? "Payment completed successfully. Your registration is now pending admin approval."
-    : "";
+  const paymentSuccessMessage =
+    paymentStatus === "success"
+      ? "Payment completed successfully. Your registration is now pending admin approval."
+      : "";
 
-  const paymentCancelError = paymentStatus === "cancel"
-    ? "Payment was canceled. Please try again to complete registration."
-    : "";
+  const paymentCancelError =
+    paymentStatus === "cancel"
+      ? "Payment was canceled. Please try again to complete registration."
+      : "";
 
   useEffect(() => {
     if (payhereData && payhereFormRef.current) {
@@ -61,9 +71,14 @@ export default function Register() {
       const { password, ...payload } = form;
       const res = await api.post("/payments/registration", payload);
       setMessage(res.data.message || "Redirecting to payment gateway...");
-      setPayhereData({ ...res.data.payhere, checkoutUrl: res.data.checkoutUrl });
+      setPayhereData({
+        ...res.data.payhere,
+        checkoutUrl: res.data.checkoutUrl,
+      });
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Registration failed");
+      setError(
+        err.response?.data?.message || err.message || "Registration failed",
+      );
     } finally {
       setLoading(false);
     }
@@ -107,7 +122,9 @@ export default function Register() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Full Name */}
             <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Full Name</label>
+              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">
+                Full Name
+              </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
                   <User className="w-4 h-4" />
@@ -117,7 +134,9 @@ export default function Register() {
                   required
                   placeholder="John Doe"
                   value={form.fullName}
-                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, fullName: e.target.value })
+                  }
                   className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
                 />
               </div>
@@ -125,7 +144,9 @@ export default function Register() {
 
             {/* Email Address */}
             <div className="space-y-1.5">
-              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Email Address</label>
+              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">
+                Email Address
+              </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
                   <Mail className="w-4 h-4" />
@@ -143,7 +164,9 @@ export default function Register() {
 
             {/* Contact Number */}
             <div className="space-y-1.5">
-              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Contact Number</label>
+              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">
+                Contact Number
+              </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
                   <Phone className="w-4 h-4" />
@@ -152,7 +175,9 @@ export default function Register() {
                   type="tel"
                   placeholder="0771234567"
                   value={form.contactNumber}
-                  onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, contactNumber: e.target.value })
+                  }
                   className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
                 />
               </div>
@@ -165,7 +190,6 @@ export default function Register() {
               </label>
 
               <div className="relative group">
-
                 {/* Left Icon */}
                 <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gold/70 group-focus-within:text-gold transition-colors duration-300">
                   <Calendar className="w-4 h-4" />
@@ -216,10 +240,7 @@ export default function Register() {
         cursor-pointer
       "
                 >
-                  <option
-                    value=""
-                    className="bg-slate-900 text-white"
-                  >
+                  <option value="" className="bg-slate-900 text-white">
                     Select Batch Year
                   </option>
 
@@ -242,7 +263,9 @@ export default function Register() {
 
             {/* Job Title */}
             <div className="space-y-1.5">
-              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Job Title</label>
+              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">
+                Job Title
+              </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
                   <Mail className="w-4 h-4" />
@@ -252,7 +275,9 @@ export default function Register() {
                   required
                   placeholder="Job Title"
                   value={form.jobTitle}
-                  onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, jobTitle: e.target.value })
+                  }
                   className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
                 />
               </div>
@@ -261,7 +286,9 @@ export default function Register() {
             {/* NIC */}
 
             <div className="space-y-1.5">
-              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">NIC</label>
+              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">
+                NIC
+              </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
                   <IdCard className="w-4 h-4" />
@@ -280,7 +307,9 @@ export default function Register() {
             {/* Address */}
 
             <div className="space-y-1.5">
-              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Address</label>
+              <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">
+                Address
+              </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
                   <Mail className="w-4 h-4" />
@@ -290,30 +319,33 @@ export default function Register() {
                   required
                   placeholder="Address"
                   value={form.address}
-                  onChange={(e) => setForm({ ...form, address: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, address: e.target.value })
+                  }
                   className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
                 />
               </div>
             </div>
-
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gold hover:bg-gold-hover text-black font-extrabold rounded-2xl py-4 transition-all duration-300 shadow-lg shadow-gold/10 hover:shadow-gold/20 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-xs tracking-widest uppercase mt-6"
-            >
-              {loading ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                "Register & Pay LKR 1,000"
-              )}
-            </button>
           </div>
 
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gold hover:bg-gold-hover text-black font-extrabold rounded-2xl py-4 transition-all duration-300 shadow-lg shadow-gold/10 hover:shadow-gold/20 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-xs tracking-widest uppercase mt-6"
+          >
+            {loading ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              "Register & Pay LKR 1,000"
+            )}
+          </button>
           <div className="text-center pt-2 border-t border-white/5">
             <p className="text-white/40 text-xs font-semibold">
               Already registered?{" "}
-              <Link to="/login" className="text-gold hover:underline transition-all font-bold">
+              <Link
+                to="/login"
+                className="text-gold hover:underline transition-all font-bold"
+              >
                 Sign In here
               </Link>
             </p>
@@ -322,11 +354,16 @@ export default function Register() {
       </form>
 
       {payhereData?.checkoutUrl && (
-        <form ref={payhereFormRef} action={payhereData.checkoutUrl} method="post" className="hidden">
+        <form
+          ref={payhereFormRef}
+          action={payhereData.checkoutUrl}
+          method="post"
+          className="hidden"
+        >
           {Object.entries(payhereData).map(([name, value]) =>
             name === "checkoutUrl" ? null : (
               <input key={name} type="hidden" name={name} value={value} />
-            )
+            ),
           )}
         </form>
       )}

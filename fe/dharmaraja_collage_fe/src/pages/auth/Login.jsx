@@ -43,8 +43,8 @@ export default function Login() {
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gold/5 blur-[120px] pointer-events-none" />
 
-      <form 
-        onSubmit={submitHandler} 
+      <form
+        onSubmit={submitHandler}
         className="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl relative space-y-6 hover:border-gold/20 transition-all duration-500"
       >
         {/* Logo/Branding */}
@@ -62,7 +62,7 @@ export default function Login() {
 
         {error && (
           <div className="bg-red-500/15 text-red-200 border border-red-500/20 p-4 rounded-2xl text-xs font-medium">
-             {error}
+            {error}
           </div>
         )}
 
@@ -103,7 +103,7 @@ export default function Login() {
             </div>
           </div>
 
-          <button 
+          <button
             type="submit"
             disabled={loading}
             className="w-full bg-gold hover:bg-gold-hover text-black font-extrabold rounded-2xl py-4 transition-all duration-300 shadow-lg shadow-gold/10 hover:shadow-gold/20 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-xs tracking-widest uppercase mt-6"
@@ -118,12 +118,12 @@ export default function Login() {
 
         <div className="text-center pt-2 border-t border-white/5">
           <p className="text-white/40 text-xs font-semibold">
-            <Link to="/forgot-password" className="text-gold hover:underline transition-all font-bold mr-2">
+            <Link to="/forgot-password" className="text-gold hover:underline transition-all font-bold">
               Forgot Password?
             </Link>
             <span className="mx-1 text-gray-500">|</span>
-            New member? <Link to="/register" className="text-gold hover:underline transition-all font-bold">
-              Register & Sign Up
+            <span className="mr-1">New member?</span> <Link to="/register" className="text-gold hover:underline transition-all font-bold">
+            Register & Sign Up
             </Link>
           </p>
         </div>
