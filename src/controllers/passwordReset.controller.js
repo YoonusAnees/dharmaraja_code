@@ -48,6 +48,7 @@ export const verifyOTP = async (req, res, next) => {
       return res.status(400).json({ message: "OTP has expired" });
     }
     res.json({ success: true, message: "OTP verified" });
+
   } catch (error) {
     next(error);
   }
@@ -70,10 +71,16 @@ export const resetPassword = async (req, res, next) => {
       return res.status(400).json({ message: "OTP has expired" });
     }
     const hashed = await bcrypt.hash(newPassword, 12);
-    await User.findOneAndUpdate({ email }, { password: hashed });
+    const user = await User.findOneAndUpdate({ email }, { password: hashed });
+
     record.used = true;
     await record.save();
-    res.json({ success: true, message: "Password reset successful" });
+    const html = emailTemplate({
+      title: "Password Reseted Successfully",
+      body: `<p>Dear ${user.fullName},</p><p>Your password has been reset successfully.</p>`,
+    });
+    await sendBrevoEmail({ to: email, subject: "Password Reset Successfully", html });
+    res.json({ success: true, message: "Password reset successfully" });
   } catch (error) {
     next(error);
   }
