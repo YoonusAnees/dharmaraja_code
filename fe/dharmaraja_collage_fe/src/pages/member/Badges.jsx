@@ -58,7 +58,9 @@ export default function Badges() {
       let stored = null;
       try {
         stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
-      } catch (_) {}
+      } catch {
+        void 0;
+      }
 
       if (paymentStatus === "success" && (orderId || stored?.orderId)) {
         try {
@@ -69,7 +71,7 @@ export default function Badges() {
             amount: stored?.amount,
           });
         } catch (err) {
-          console.error("complete-success error:", err);
+          console.error("complete-success error:", err.response?.data || err);
         }
         sessionStorage.removeItem(SESSION_KEY);
       }

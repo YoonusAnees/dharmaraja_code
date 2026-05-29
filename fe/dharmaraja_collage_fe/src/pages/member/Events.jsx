@@ -55,7 +55,9 @@ export default function Events() {
       let stored = null;
       try {
         stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
-      } catch (_) {}
+      } catch {
+        void 0;
+      }
 
       if (paymentStatus === "success" && (orderId || stored?.orderId)) {
         try {
@@ -253,13 +255,21 @@ export default function Events() {
             return (
               <div
                 key={event._id}
-                className={`rounded-3xl border p-6 transition-all duration-300 flex flex-col shadow-xl ${
+                className={`rounded-3xl border overflow-hidden transition-all duration-300 flex flex-col shadow-xl ${
                   status === "paid"   ? "bg-emerald-500/[0.03] border-emerald-500/20"
                   : status === "pending" ? "bg-amber-500/[0.03] border-amber-500/20"
                   : "bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10"
                 }`}
               >
-                <div className="space-y-4 flex-1">
+                {event.image && (
+                  <img
+                    src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${event.image}`}
+                    alt={event.title}
+                    loading="lazy"
+                    className="w-full h-48 object-cover border-b border-white/5"
+                  />
+                )}
+                <div className="p-6 space-y-4 flex-1">
                   {status === "paid" && (
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
                       <CheckCircle className="w-3 h-3" /> Registered

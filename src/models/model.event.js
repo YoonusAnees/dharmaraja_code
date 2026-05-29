@@ -11,6 +11,10 @@ const eventSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    budget: {
+      type: Number,
+      default: 0,
+    },
     linkedCampaign: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Campaign",

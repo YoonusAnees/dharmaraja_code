@@ -74,7 +74,7 @@ export default function NotificationBell() {
 
             {/* ===== DROPDOWN ===== */}
             {open && (
-                <div className="absolute right-0 mt-3 w-80 sm:w-[22rem] bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                <div className="fixed top-20 left-4 right-4 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-3 w-auto sm:w-[22rem] bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
 
                     {/* Header */}
                     <div className="px-4 py-3 border-b border-white/10 flex justify-between items-center bg-white/[0.03]">

@@ -3,6 +3,7 @@ import User from "../models/model.user.js";
 import RefreshToken from "../models/model.refreshToken.js";
 import Badge from "../models/model.badge.js";
 import Event from "../models/model.event.js";
+import Payment from "../models/model.payment.js";
 import Donation from "../models/model.donation.js";
 import { registerUser, approveUser, registerAdminService } from "../services/auth.service.js";
 import {
@@ -11,6 +12,7 @@ import {
   rotateRefreshToken,
 } from "../services/token.service.js";
 import { setAuthCookies, clearAuthCookies } from "../utils/cookies.js";
+import { sendBrevoEmail, rejectedEmail } from "../services/email.service.js";
 
 export const register = async (req, res, next) => {
   try {
@@ -65,9 +67,17 @@ export const login = async (req, res, next) => {
 
     if (!match) return res.status(400).json({ message: "Invalid credentials" });
 
-    if (user.role === "member" && user.status !== "approved") {
-      return res.status(403).json({ message: "Account pending admin approval" });
+    // Registration fee and admin approval checks for members
+    if (user.role === "member") {
+      if (!user.registrationFeePaid) {
+        return res.status(403).json({ message: "Registration fee not paid" });
+      }
+      if (user.status !== "approved") {
+        return res.status(403).json({ message: "Account pending admin approval" });
+      }
     }
+    // Continue with token generation
+
 
     const accessToken = generateAccessToken(user);
     const refreshToken = await generateRefreshToken(user);
@@ -126,19 +136,7 @@ export const me = async (req, res) => {
   });
 };
 
-export const approveMember = async (req, res, next) => {
-  try {
-    const user = await approveUser(req.params.id);
 
-    res.json({
-      success: true,
-      message: "Member approved",
-      user,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 export const getMembers = async (req, res, next) => {
   try {
@@ -151,6 +149,49 @@ export const getMembers = async (req, res, next) => {
     next(error);
   }
 };
+
+// Approve a pending member (admin)
+export const approveMember = async (req, res, next) => {
+  try {
+    const user = await approveUser(req.params.id);
+    // Send approval email with credentials (generated in approveUser)
+    // approveUser already sends email, so just respond
+    res.json({
+      success: true,
+      message: "Member approved",
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Reject a pending member (admin)
+export const rejectMember = async (req, res, next) => {
+  try {
+    const { reason } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    // Send rejection email
+    try {
+      await sendBrevoEmail({
+        to: user.email,
+        subject: "Registration Rejected",
+        html: rejectedEmail({ name: user.fullName, reason: reason || "No reason provided" }),
+      });
+    } catch (emailError) {
+      console.error("Failed to send rejection email via Brevo:", emailError.message);
+    }
+    // Delete the user record
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Member rejected and removed" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 export const markMemberAsPaid = async (req, res, next) => {
   try {
@@ -201,19 +242,40 @@ export const updateMember = async (req, res, next) => {
 export const deleteMember = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
     if (user._id.toString() === req.user?._id?.toString()) {
-      return res.status(400).json({ message: "You cannot delete your own admin account" });
+      return res.status(400).json({
+        message: "You cannot delete your own admin account",
+      });
     }
 
+    // Store values BEFORE delete
+    const email = user.email;
+    const fullName = user.fullName;
+
     await User.findByIdAndDelete(req.params.id);
+// Remove registration payment record(s) associated with this user
+await Payment.deleteMany({ user: user._id, type: "registration" });
+
+try {
+      await sendBrevoEmail({
+        to: email,
+        subject: "Account Removed",
+        html: rejectedEmail({ name: fullName, reason: "Your account has been removed by an administrator." }),
+      });
+    } catch (emailError) {
+      console.error("Failed to send removal email via Brevo:", emailError.message);
+    }
+
     res.json({
       success: true,
       message: "Member deleted successfully",
     });
+
   } catch (error) {
     next(error);
   }
@@ -223,8 +285,8 @@ export const getMembersDirectory = async (req, res, next) => {
   try {
     // Fetch all approved member accounts, populating their badge and events
     const members = await User.find({ role: "member", status: "approved" })
-      .select("fullName email contactNumber batchYear branch badge events createdAt")
-      .populate("badge")
+      .select("fullName email contactNumber batchYear branch badgeHistory events jobTitle address createdAt")
+      .populate("badgeHistory.badge")
       .populate("events")
       .sort("fullName");
 
@@ -241,8 +303,10 @@ export const getMembersDirectory = async (req, res, next) => {
           contactNumber: member.contactNumber,
           batchYear: member.batchYear,
           branch: member.branch,
-          badge: member.badge,
+          badgeHistory: member.badgeHistory,
           events: member.events,
+          jobTitle: member.jobTitle,
+          address: member.address,
           createdAt: member.createdAt,
           donations,
         };
@@ -260,7 +324,7 @@ export const getMembersDirectory = async (req, res, next) => {
 
 export const updateProfile = async (req, res, next) => {
   try {
-    const { fullName, contactNumber, batchYear, branch, password } = req.body;
+    const { fullName, contactNumber, batchYear, branch, password, jobTitle, address } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
@@ -271,6 +335,12 @@ export const updateProfile = async (req, res, next) => {
     if (contactNumber !== undefined) user.contactNumber = contactNumber;
     if (batchYear !== undefined) user.batchYear = batchYear;
     if (branch !== undefined) user.branch = branch;
+    if (jobTitle !== undefined) user.jobTitle = jobTitle;
+    if (address !== undefined) user.address = address;
+
+    if (req.file) {
+      user.profilePicture = req.file.path;
+    }
 
     if (password) {
       user.password = await bcrypt.hash(password, 12);

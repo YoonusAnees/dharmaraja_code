@@ -16,7 +16,10 @@ export default function ManageBadges() {
   };
 
   useEffect(() => {
-    loadBadges();
+    const timer = setTimeout(() => {
+      loadBadges();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const submitHandler = async (e) => {

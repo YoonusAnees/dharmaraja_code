@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -26,6 +28,10 @@ app.use(cookieParser());
 app.use(compression());
 app.use(morgan("dev"));
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/email", express.static(path.join(__dirname, "email")));
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   "http://localhost:5173",

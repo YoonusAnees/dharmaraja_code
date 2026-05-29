@@ -7,7 +7,7 @@ import Badge from "../models/model.badge.js";
 import Event from "../models/model.event.js";
 import Donation from "../models/model.donation.js";
 import Payment from "../models/model.payment.js";
-import { sendBrevoEmail, registrationPaymentEmail } from "../services/email.service.js";
+import { sendBrevoEmail, approvalEmail, pendingApprovalEmail, registrationPaymentEmail } from "../services/email.service.js";
 
 const PAYHERE_URL = process.env.PAYHERE_MODE === "production"
   ? "https://www.payhere.lk/pay/checkout"
@@ -179,10 +179,10 @@ const createOrderId = () => new mongoose.Types.ObjectId().toString();
 // ─────────────────────────────────────────────────────────────────────────────
 export const initiateRegistrationPayment = async (req, res, next) => {
   try {
-    const { fullName, email, contactNumber, batchYear, password } = req.body;
+    const { fullName, email, contactNumber, batchYear, address, nic, jobTitle } = req.body;
 
-    if (!fullName || !email || !password) {
-      return res.status(400).json({ message: "Full name, email and password are required" });
+    if (!fullName || !email) {
+      return res.status(400).json({ message: "Full name and email are required" });
     }
 
     const existingUser = await User.findOne({ email });
@@ -190,7 +190,9 @@ export const initiateRegistrationPayment = async (req, res, next) => {
       return res.status(400).json({ message: "Email already exists. Please use another email or contact admin." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // Generate a temporary password for the new member (required by the schema)
+    const tempPassword = crypto.randomBytes(8).toString("hex");
+    const hashedPassword = await bcrypt.hash(tempPassword, 12);
     const user = await User.create({
       fullName,
       email,
@@ -199,11 +201,22 @@ export const initiateRegistrationPayment = async (req, res, next) => {
       password: hashedPassword,
       status: "pending",
       role: "member",
+      address,
+      nic,
+      jobTitle,
       registrationFeePaid: false,
     });
 
-    const [firstName, ...rest] = fullName.trim().split(" ");
-    const lastName = rest.join(" ") || "Member";
+    // Send acknowledgment email to the new member
+    try {
+      await sendBrevoEmail({
+        to: user.email,
+        subject: "Registration Received – Pending Approval",
+        html: pendingApprovalEmail(user.fullName),
+      });
+    } catch (emailErr) {
+      console.error("Failed to send pending approval email:", emailErr.message);
+    }
     const orderId = createOrderId();
 
     // For registration we DO create the payment record upfront (user must exist)
@@ -217,6 +230,10 @@ export const initiateRegistrationPayment = async (req, res, next) => {
       currency: "LKR",
       status: "pending",
     });
+
+    // Split full name into first and last for PayHere payload
+    const [firstName, ...rest] = fullName.trim().split(" ");
+    const lastName = rest.join(" ") || "Member";
 
     const payherePayload = getPayHerePayload({
       orderId,
@@ -277,6 +294,15 @@ export const createCheckoutPayment = async (req, res, next) => {
       if (!campaign) return res.status(404).json({ message: "Campaign not found" });
       finalAmount = campaign.campaignType === "fixed" ? campaign.fixedAmount : Number(requestedAmount);
       if (!finalAmount || finalAmount <= 0) return res.status(400).json({ message: "Invalid donation amount" });
+
+      const now = new Date();
+      if (campaign.startDate && now < campaign.startDate) {
+        return res.status(400).json({ message: "Campaign has not started yet" });
+      }
+      if (campaign.endDate && now > new Date(campaign.endDate).setHours(23, 59, 59, 999)) {
+        return res.status(400).json({ message: "Campaign has ended" });
+      }
+
       description = `Donation to ${campaign.name}`;
     }
 
@@ -304,13 +330,13 @@ export const createCheckoutPayment = async (req, res, next) => {
 
     const returnPath =
       type === "donation" ? "/member/campaigns?payment=success"
-      : type === "badge"  ? "/member/badges?payment=success"
-      :                     "/member/events?payment=success";
+        : type === "badge" ? "/member/badges?payment=success"
+          : "/member/events?payment=success";
 
     const cancelPath =
       type === "donation" ? "/member/campaigns?payment=cancel"
-      : type === "badge"  ? "/member/badges?payment=cancel"
-      :                     "/member/events?payment=cancel";
+        : type === "badge" ? "/member/badges?payment=cancel"
+          : "/member/events?payment=cancel";
 
     // paymentMeta is embedded in custom_1 so the PayHere webhook can reconstruct the payment
     const paymentMeta = {
@@ -517,15 +543,28 @@ export const completePaymentSuccessReturn = async (req, res, next) => {
       return res.json({ success: true, message: "Payment already marked as paid" });
     }
 
+    // Mark paid and fulfill immediately since we are returning from PayHere success URL
     payment.status = "paid";
-    payment.payhereReference = payment.payhereReference || `sandbox_return_${Date.now()}`;
     await payment.save();
 
     await fulfillPayment(payment);
 
-    res.json({ success: true, message: "Payment successfully completed" });
+    res.json({ success: true, message: "Payment completed successfully!" });
   } catch (error) {
-    next(error);
+    if (error.code === 11000) {
+      // Duplicate key error due to concurrent requests (e.g., React StrictMode double rendering)
+      // The other concurrent request successfully processed it.
+      return res.json({
+        success: true,
+        message: "Payment completed successfully! (concurrent request handled)"
+      });
+    }
+    console.error("completePaymentSuccessReturn ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Unknown error",
+      stack: error.stack
+    });
   }
 };
 
@@ -564,3 +603,46 @@ export const markPaymentCancelled = async (req, res, next) => {
     next(error);
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET ALL PENDING PAYMENTS (Admin Only)
+// ─────────────────────────────────────────────────────────────────────────────
+export const getPendingPayments = async (req, res, next) => {
+  try {
+    const payments = await Payment.find({ status: "pending" })
+      .populate("user", "fullName email contactNumber")
+      .populate("item")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, payments });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE PENDING PAYMENT
+// ─────────────────────────────────────────────────────────────────────────────
+export const deletePendingPayment = async (req, res, next) => {
+  try {
+    const payment = await Payment.findById(req.params.id);
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    if (payment.status !== "pending") {
+      return res.status(400).json({ message: "Only pending payments can be deleted" });
+    }
+
+    if (req.user.role !== "admin" && payment.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You are not authorized to delete this payment" });
+    }
+
+    await Payment.findByIdAndDelete(req.params.id);
+
+    res.json({ success: true, message: "Pending payment deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+

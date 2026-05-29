@@ -3,7 +3,11 @@ import { createNotification } from "../services/notification.service.js";
 
 export const createEvent = async (req, res, next) => {
   try {
-    const event = await Event.create(req.body);
+    const eventData = { ...req.body };
+    if (req.file) {
+      eventData.image = req.file.path;
+    }
+    const event = await Event.create(eventData);
 
     await createNotification({
       title: "New Event",
