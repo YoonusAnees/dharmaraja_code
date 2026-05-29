@@ -35,7 +35,7 @@ export const sendBrevoEmail = async ({ to, subject, html }) => {
 
 export const emailTemplate = ({ title, body, buttonText, buttonUrl }) => {
   return `
-  <div style="font-family:Arial,sans-serif;background:#f4f7fb;padding:30px;">
+  <div style="font-family:Arial,sans-serif;padding:30px;">
     <div style="max-width:650px;margin:auto;background:white;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;">
       <div style="background:#073b2e;color:white;padding:24px;text-align:center;">
         <img src="https://res.cloudinary.com/dnxzkzyze/image/upload/v1779983340/obams/dc_logo.png" alt="OBA Logo" style="width:80px;height:auto;margin-bottom:15px;display:inline-block;" />
@@ -110,7 +110,7 @@ export const rejectedEmail = ({ name, reason }) =>
       <p>Your registration has been rejected.</p>
       <p><b>Reason:</b> ${reason}</p>
     `,
-    });
+  });
 
 export const campaignBroadcastEmail = ({ name, campaign }) =>
   emailTemplate({
