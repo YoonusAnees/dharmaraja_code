@@ -1,37 +1,53 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../../context/useAuth";
-import { Mail, Lock, RefreshCw } from "lucide-react";
+import { useLocation, useNavigate, Link } from "react-router-dom";
+import { RefreshCw, Lock, ShieldCheck } from "lucide-react";
+import api from "../../api/axios";
 import image from "/dc_logo.png";
 
-
-export default function Login() {
-  const { login } = useAuth();
+export default function ResetPassword() {
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const email = location.state?.email || "";
+  const otp = location.state?.otp || "";
 
-  const [error, setError] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
     setError("");
+    setSuccess("");
+
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const user = await login(form);
+      const { data } = await api.post("/auth/reset-password", {
+        email,
+        otp,
+        newPassword,
+        confirmPassword,
+      });
 
-      if (user.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/member");
-      }
+      setSuccess(data.message || "Password reset successful");
+
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Password reset failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -39,7 +55,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 relative overflow-hidden">
-      {/* Decorative mechanical aura glows */}
+      {/* Decorative Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gold/5 blur-[120px] pointer-events-none" />
 
@@ -47,62 +63,82 @@ export default function Login() {
         onSubmit={submitHandler}
         className="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl relative space-y-6 hover:border-gold/20 transition-all duration-500"
       >
-        {/* Logo/Branding */}
+        {/* Logo / Branding */}
         <div className="text-center space-y-2">
           <div className="inline-flex p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-gold animate-pulse">
             <img src={image} alt="Logo" className="w-6 h-6" />
           </div>
+
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wider uppercase">
-            DHARMARAJA COLLAGE OBA <span className="text-gold">Login</span>
+            Reset <span className="text-gold">Password</span>
           </h1>
+
           <p className="text-white/40 text-xs font-semibold tracking-wide uppercase">
-            Old Boys Association Management System
+            Secure your account access
           </p>
         </div>
 
+        {/* Error */}
         {error && (
           <div className="bg-red-500/15 text-red-200 border border-red-500/20 p-4 rounded-2xl text-xs font-medium">
             {error}
           </div>
         )}
 
-        <div className="space-y-4">
-          {/* Email field */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Email Address</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
-                <Mail className="w-4 h-4" />
-              </span>
-              <input
-                type="email"
-                required
-                placeholder="name@example.com"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
-              />
-            </div>
+        {/* Success */}
+        {success && (
+          <div className="bg-emerald-500/15 text-emerald-200 border border-emerald-500/20 p-4 rounded-2xl text-xs font-medium flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4" />
+            {success}
           </div>
+        )}
 
-          {/* Password field */}
+        <div className="space-y-4">
+          {/* New Password */}
           <div className="space-y-1.5">
-            <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">Password</label>
+            <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">
+              New Password
+            </label>
+
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
                 <Lock className="w-4 h-4" />
               </span>
+
               <input
                 type="password"
                 required
                 placeholder="••••••••"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
               />
             </div>
           </div>
 
+          {/* Confirm Password */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] text-white/50 font-bold uppercase tracking-wider block">
+              Confirm Password
+            </label>
+
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30">
+                <Lock className="w-4 h-4" />
+              </span>
+
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full bg-slate-950/40 border border-white/10 rounded-2xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/20 transition-all duration-300 placeholder-white/20 font-medium"
+              />
+            </div>
+          </div>
+
+          {/* Button */}
           <button
             type="submit"
             disabled={loading}
@@ -111,19 +147,20 @@ export default function Login() {
             {loading ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
             ) : (
-              "Sign In"
+              "Reset Password"
             )}
           </button>
         </div>
 
+        {/* Footer */}
         <div className="text-center pt-2 border-t border-white/5">
           <p className="text-white/40 text-xs font-semibold">
-            <Link to="/forgot-password" className="text-gold hover:underline transition-all font-bold">
-              Forgot Password?
-            </Link>
-            <span className="mx-1 text-gray-500">|</span>
-            <span className="mr-1">New member?</span> <Link to="/register" className="text-gold hover:underline transition-all font-bold">
-            Register & Sign Up
+            Remembered your password?
+            <Link
+              to="/login"
+              className="text-gold hover:underline transition-all font-bold ml-2"
+            >
+              Login
             </Link>
           </p>
         </div>

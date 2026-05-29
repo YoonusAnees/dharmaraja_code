@@ -23,6 +23,9 @@ import MemberNotifications from "../pages/member/MemberNotifications";
 import Directory from "../pages/member/Directory";
 import Profile from "../pages/member/Profile";
 import RegisterAdmin from "../pages/auth/AdminRegister";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import VerifyOtp from "../pages/auth/VerifyOtp";
+import ResetPassword from "../pages/auth/ResetPassword";
 
 export default function AppRoutes() {
   return (
@@ -32,6 +35,9 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/register-admin" element={<RegisterAdmin />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/verify-otp" element={<VerifyOtp />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       <Route
         path="/admin"
