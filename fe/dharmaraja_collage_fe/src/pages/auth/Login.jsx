@@ -62,7 +62,7 @@ export default function Login() {
 
         {error && (
           <div className="bg-red-500/15 text-red-200 border border-red-500/20 p-4 rounded-2xl text-xs font-medium">
-            ⚠️ {error}
+             {error}
           </div>
         )}
 
@@ -118,8 +118,11 @@ export default function Login() {
 
         <div className="text-center pt-2 border-t border-white/5">
           <p className="text-white/40 text-xs font-semibold">
-            New member?{" "}
-            <Link to="/register" className="text-gold hover:underline transition-all font-bold">
+            <Link to="/forgot-password" className="text-gold hover:underline transition-all font-bold mr-2">
+              Forgot Password?
+            </Link>
+            <span className="mx-1 text-gray-500">|</span>
+            New member? <Link to="/register" className="text-gold hover:underline transition-all font-bold">
               Register & Sign Up
             </Link>
           </p>

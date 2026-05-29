@@ -15,6 +15,7 @@ import {
   getMembersDirectory,
   updateProfile,
 } from "../controllers/auth.controller.js";
+import { forgotPassword, verifyOTP, resetPassword } from "../controllers/passwordReset.controller.js";
 import { protect, protectMe } from "../middlewares/auth.middleware.js";
 import { adminOnly } from "../middlewares/role.middleware.js";
 import { upload, processImage } from "../middlewares/upload.middleware.js";
@@ -26,7 +27,9 @@ router.post("/register-admin", registerAdmin);
 router.post("/login", login);
 router.post("/refresh", refresh);
 router.post("/logout", logout);
-
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-otp", verifyOTP);
+router.post("/reset-password", resetPassword);
 router.get("/me", protectMe, me);
 router.put("/me", protect, upload.single("profilePicture"), processImage, updateProfile);
 router.get("/members/directory", protect, getMembersDirectory);
